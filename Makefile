@@ -3,10 +3,15 @@
 
 .DEFAULT_GOAL := help
 
-# Defaults for the single-service targets below. `run` assumes the C# layout;
-# the Go services in month 2 use cmd/server and will need their own recipe.
+# Defaults for the single-service targets below.
 S ?= order-service
 PORT ?= 5001
+
+# Where each service's runnable project lives — one line per service. order-service is
+# layered, so its host is src/Api; the gateway has no layers, so its project is src
+# itself. The Go services in month 2 use cmd/server and will need their own recipe.
+PROJECT_order-service := services/order-service/src/Api
+PROJECT_api-gateway   := services/api-gateway/src
 .PHONY: help setup up infra run call down clean ps logs proto proto-check test arch lint
 
 help: ## Show available targets
@@ -26,7 +31,8 @@ infra: ## Infrastructure only — use when debugging a service from the IDE
 	docker compose -f compose.infra.yml up -d
 
 run: ## Run one service from source, no containers (make run S=order-service)
-	dotnet run --project services/$(S)/src/Api --no-launch-profile
+	@test -n "$(PROJECT_$(S))" || { echo "Unknown service '$(S)'. Add PROJECT_$(S) to the Makefile."; exit 1; }
+	dotnet run --project $(PROJECT_$(S)) --no-launch-profile
 
 call: ## Call a running service (make call S=order-service M=rpc.order.v1.OrderService/GetOrder D='{"order_id":"1"}')
 	grpcurl -plaintext -import-path proto -proto rpc/order/v1/order_service.proto \

@@ -5,9 +5,8 @@
   </Folder>
   <Folder Name="/services/" />
   <Folder Name="/services/api-gateway/" />
-  <Folder Name="/services/api-gateway/src/" />
-  <Folder Name="/services/api-gateway/src/Api/">
-    <Project Path="services/api-gateway/src/Api/Ecommerce.ApiGateway.Api.csproj" />
+  <Folder Name="/services/api-gateway/src/">
+    <Project Path="services/api-gateway/src/Ecommerce.ApiGateway.csproj" />
   </Folder>
   <Folder Name="/services/order-service/" />
   <Folder Name="/services/order-service/src/" />

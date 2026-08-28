@@ -31,3 +31,4 @@ What else was on the table, and the specific reason each was rejected.
 | 001 | Why polyglot | 🔴 to write |
 | [002](002-contract-layout-and-generation.md) | Contract layout and code generation scope | ✅ Accepted |
 | [003](003-gateway-translates-rest-to-grpc-by-hand.md) | The gateway translates REST to gRPC by hand | ✅ Accepted |
+| [004](004-gateway-folders-by-feature.md) | The gateway groups code by feature, order-service by layer | ✅ Accepted |

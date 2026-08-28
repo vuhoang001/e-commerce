@@ -1,9 +1,8 @@
-using Ecommerce.ApiGateway.Api.Contracts;
 using Ecommerce.Rpc.Order.V1;
 using Grpc.Core;
 using OrderServiceClient = Ecommerce.Rpc.Order.V1.OrderService.OrderServiceClient;
 
-namespace Ecommerce.ApiGateway.Api.Endpoints;
+namespace Ecommerce.ApiGateway.Orders;
 
 internal static class OrderEndpoints
 {
@@ -23,7 +22,7 @@ internal static class OrderEndpoints
                     new GetOrderRequest { OrderId = id },
                     cancellationToken: cancellationToken);
 
-                return Results.Ok(reply.Order.ToDto());
+                return Results.Ok(reply.Order.ToResponse());
             }
             catch (RpcException e) when (e.StatusCode == StatusCode.NotFound)
             {

@@ -155,14 +155,22 @@ ecommerce-polyglot/
 │   │   └── Dockerfile
 │   │
 │   └── api-gateway/                # [C# / .NET 10 + YARP]  BFF, auth, rate limiting
-│       ├── src/
-│       │   ├── Endpoints/          # Minimal API — translates REST → gRPC client calls
-│       │   ├── Clients/            # gRPC clients generated from proto
+│       ├── src/                    # ★ NO Api/ level — the gateway has no layers
+│       │   ├── Orders/             # ★ one folder per public feature: the endpoint,
+│       │   │                       #   its response records and its mapping, together
+│       │   ├── Products/           #   month 3 — BFF fan-out, self-contained
+│       │   ├── Clients/            # gRPC clients — cross-cutting, so stays technical
 │       │   ├── Middleware/         # auth, rate limiting, correlation id
-│       │   └── Program.cs          # YARP routes + OTel
-│       ├── appsettings.json        # YARP ReverseProxy config
+│       │   ├── Program.cs          # YARP routes + OTel
+│       │   └── appsettings.json    # beside the .csproj — .NET resolves it from the
+│       │                           #   project's content root, not the service root
 │       ├── tests/
 │       └── Dockerfile
+
+> The gateway groups by **feature**, order-service groups by **layer**. That is not an
+> inconsistency: order-service has four layers with enforced dependency rules, and the
+> gateway has none. Grouping by technical role in a gateway means one new public feature
+> touches four folders. See ADR-004.
 │
 ├── building-blocks/
 │   ├── gen/                        # ★ generated from proto — NEVER hand-edited

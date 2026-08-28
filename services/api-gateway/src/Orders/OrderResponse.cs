@@ -1,4 +1,4 @@
-namespace Ecommerce.ApiGateway.Api.Contracts;
+namespace Ecommerce.ApiGateway.Orders;
 
 /// The public JSON shape of an order.
 ///
@@ -7,21 +7,24 @@ namespace Ecommerce.ApiGateway.Api.Contracts;
 /// details a browser has no use for — money as units-plus-nanos, a tax rate in basis
 /// points, enum names like ORDER_STATUS_CONFIRMED. Translating here is the gateway
 /// earning its place; PLAN.md section 3b calls this option B.
-public sealed record OrderDto(
+public sealed record OrderResponse(
     string OrderId,
     string CustomerId,
     string Status,
-    IReadOnlyList<OrderItemDto> Items,
-    MoneyDto Total,
+    IReadOnlyList<OrderItemResponse> Items,
+    MoneyResponse Total,
     DateTimeOffset PlacedAt);
 
-public sealed record OrderItemDto(
+public sealed record OrderItemResponse(
     string ProductId,
     string ProductName,
     string Sku,
-    MoneyDto UnitPrice,
+    MoneyResponse UnitPrice,
     decimal TaxRatePercent,
     int Quantity);
 
 /// Money as a client expects to render it: 18.99 USD, not 18 units and 990000000 nanos.
-public sealed record MoneyDto(decimal Amount, string Currency);
+///
+/// Lives here rather than in a shared folder because orders are its only user today.
+/// Move it out when a second feature needs it, not before.
+public sealed record MoneyResponse(decimal Amount, string Currency);
