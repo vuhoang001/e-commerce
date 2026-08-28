@@ -1,0 +1,16 @@
+<Project>
+
+  <!-- One version per package for the whole repository. Individual projects list
+       which packages they need, never which version — that is what stops two
+       services quietly drifting onto different Google.Protobuf releases. -->
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageVersion Include="Google.Protobuf" Version="3.34.1" />
+    <PackageVersion Include="Grpc.AspNetCore" Version="2.76.0" />
+    <PackageVersion Include="Grpc.Core.Api" Version="2.76.0" />
+  </ItemGroup>
+
+</Project>

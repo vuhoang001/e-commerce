@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <!-- Month 0.5: the gRPC host only, serving hard-coded data. Domain, Application
+       and Infrastructure projects arrive in month 1 with the Order aggregate — see
+       PLAN.md section 8. -->
+
+  <PropertyGroup>
+    <RootNamespace>Ecommerce.OrderService.Api</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Grpc.AspNetCore" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../../../building-blocks/contracts-csharp/Ecommerce.Contracts.csproj" />
+  </ItemGroup>
+
+</Project>

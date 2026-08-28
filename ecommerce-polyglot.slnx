@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/building-blocks/" />
+  <Folder Name="/building-blocks/contracts-csharp/">
+    <Project Path="building-blocks/contracts-csharp/Ecommerce.Contracts.csproj" />
+  </Folder>
+  <Folder Name="/services/" />
+  <Folder Name="/services/order-service/" />
+  <Folder Name="/services/order-service/src/" />
+  <Folder Name="/services/order-service/src/Api/">
+    <Project Path="services/order-service/src/Api/Ecommerce.OrderService.Api.csproj" />
+  </Folder>
+</Solution>

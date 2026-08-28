@@ -1,0 +1,9 @@
+{
+  "//": "Makes the mise.toml dotnet pin real. Every SDK on this machine lives in one",
+  "//2": "directory, so `dotnet build` silently picks the highest installed version —",
+  "//3": "a preview SDK, if one is present — unless a global.json says otherwise.",
+  "sdk": {
+    "version": "10.0.400",
+    "rollForward": "latestFeature"
+  }
+}
