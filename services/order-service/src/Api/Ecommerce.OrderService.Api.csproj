@@ -1,8 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
-  <!-- Month 0.5: the gRPC host only, serving hard-coded data. Domain, Application
-       and Infrastructure projects arrive in month 1 with the Order aggregate — see
-       PLAN.md section 8. -->
+  <!-- The composition root and the transport. It references Infrastructure only to
+       register it — no persistence code lives here. Folders inside a layer group by
+       feature (Orders/), with genuinely cross-cutting transport concerns in Grpc/.
+       See ADR-004. -->
 
   <PropertyGroup>
     <RootNamespace>Ecommerce.OrderService.Api</RootNamespace>
@@ -14,6 +15,8 @@
 
   <ItemGroup>
     <ProjectReference Include="../../../../building-blocks/contracts-csharp/Ecommerce.Contracts.csproj" />
+    <ProjectReference Include="../Application/Ecommerce.OrderService.Application.csproj" />
+    <ProjectReference Include="../Infrastructure/Ecommerce.OrderService.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

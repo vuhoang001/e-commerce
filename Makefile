@@ -12,7 +12,7 @@ PORT ?= 5001
 # itself. The Go services in month 2 use cmd/server and will need their own recipe.
 PROJECT_order-service := services/order-service/src/Api
 PROJECT_api-gateway   := services/api-gateway/src
-.PHONY: help setup up infra run call down clean ps logs proto proto-check test arch lint
+.PHONY: help setup up infra run call down clean ps logs proto proto-check migration db-update test arch lint
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -20,6 +20,7 @@ help: ## Show available targets
 
 setup: ## First-run setup after cloning
 	mise install
+	dotnet tool restore
 	cp -n .env.example .env 2>/dev/null || true
 
 ## ── Running ──────────────────────────────────────────────────────────
@@ -57,6 +58,17 @@ proto: ## Lint and regenerate all stubs from proto/
 
 proto-check: ## Detect breaking contract changes against main
 	buf breaking proto --against '.git#branch=main,subdir=proto'
+
+## ── Database ─────────────────────────────────────────────────────────
+
+migration: ## Create a migration from the model (make migration NAME=AddOutbox)
+	@test -n "$(NAME)" || { echo "Usage: make migration NAME=SomethingDescriptive"; exit 1; }
+	dotnet ef migrations add $(NAME) \
+		--project services/order-service/src/Infrastructure \
+		--output-dir Persistence/Migrations
+
+db-update: ## Apply pending migrations to the running database
+	dotnet ef database update --project services/order-service/src/Infrastructure
 
 ## ── Quality ──────────────────────────────────────────────────────────
 

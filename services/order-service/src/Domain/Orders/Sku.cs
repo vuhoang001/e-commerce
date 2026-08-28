@@ -4,7 +4,10 @@ namespace Ecommerce.OrderService.Domain.Orders;
 
 /// A stock-keeping unit. A string with a format is a value object, not a primitive —
 /// otherwise nothing stops a product name being passed where a SKU belongs.
-public readonly record struct Sku
+///
+/// A record class, not a struct: `default(Sku)` would hold a null string that no
+/// constructor ever approved.
+public sealed record Sku
 {
     public Sku(string value)
     {

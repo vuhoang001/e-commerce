@@ -5,7 +5,12 @@ namespace Ecommerce.OrderService.Domain.Orders;
 /// An amount in one currency. There is no way to construct money without saying which
 /// currency it is in, which is the whole point: a bare decimal price is a bug waiting for
 /// a second currency to arrive.
-public readonly record struct Money
+///
+/// A record class rather than a struct for two reasons. `default(Money)` on a struct is
+/// zero with a null currency code — a value that skips every check in Of() and cannot be
+/// distinguished from a real one. And EF Core cannot map a struct as an owned type inside
+/// an owned collection, which is exactly where a line's unit price sits.
+public sealed record Money
 {
     private Money(decimal amount, string currency)
     {

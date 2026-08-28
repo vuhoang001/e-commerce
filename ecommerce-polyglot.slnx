@@ -13,11 +13,22 @@
   <Folder Name="/services/order-service/src/Api/">
     <Project Path="services/order-service/src/Api/Ecommerce.OrderService.Api.csproj" />
   </Folder>
+  <Folder Name="/services/order-service/src/Application/">
+    <Project Path="services/order-service/src/Application/Ecommerce.OrderService.Application.csproj" />
+  </Folder>
   <Folder Name="/services/order-service/src/Domain/">
     <Project Path="services/order-service/src/Domain/Ecommerce.OrderService.Domain.csproj" />
+  </Folder>
+  <Folder Name="/services/order-service/src/Infrastructure/">
+    <Project Path="services/order-service/src/Infrastructure/Ecommerce.OrderService.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/services/order-service/tests/" />
   <Folder Name="/services/order-service/tests/Domain.UnitTests/">
     <Project Path="services/order-service/tests/Domain.UnitTests/Ecommerce.OrderService.Domain.UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/tests/" />
+  <Folder Name="/tests/arch/" />
+  <Folder Name="/tests/arch/dotnet/">
+    <Project Path="tests/arch/dotnet/Ecommerce.ArchitectureTests.csproj" />
   </Folder>
 </Solution>

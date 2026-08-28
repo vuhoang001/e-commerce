@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- References Domain and abstractions only. No EF Core, no Npgsql, no gRPC: a handler
+       orchestrates, it does not know about SQL or Kafka. tests/arch/dotnet enforces it. -->
+
+  <PropertyGroup>
+    <RootNamespace>Ecommerce.OrderService.Application</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MediatR" />
+    <PackageReference Include="FluentValidation" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Domain/Ecommerce.OrderService.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

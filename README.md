@@ -4,8 +4,8 @@ An online shop, built as a set of small independent services rather than one lar
 Every order placed, item searched, and stock level changed becomes an event the rest of the
 system reacts to — including a pipeline that turns those events into live numbers as they happen.
 
-> **Status:** month 0.5 — the walking skeleton. Two of the seven services exist and a request
-> travels the full path; the rest is still on paper. See [Running it](#running-it).
+> **Status:** month 1 — the order domain. Two of the seven services exist, with orders
+> persisted in Postgres behind an aggregate; the rest is still on paper. See [Running it](#running-it).
 
 ## What it will do
 
@@ -75,31 +75,45 @@ tests rather than left to discipline.
 
 ## Running it
 
-`make up` is the intended entry point, but it needs the compose files, which are not
-written yet. Until then, two terminals:
+`make up` is the intended entry point, but `compose.services.yml` is not written yet. Until
+then, start the infrastructure and run the services from source:
 
 ```sh
 make setup                 # once, after cloning — pins every tool version
+make infra                 # Postgres
+make db-update             # apply migrations
 make run S=order-service   # terminal 1 — gRPC on :5001
 make run S=api-gateway     # terminal 2 — REST on :8080
 ```
 
+Place an order:
+
 ```sh
-curl localhost:8080/api/orders/1
+make call S=order-service M=rpc.order.v1.OrderService/PlaceOrder D='{
+  "customer_id":"11111111-1111-1111-1111-111111111111",
+  "shipping_address":{"line1":"221B Baker Street","city":"London","postal_code":"NW1 6XE","country":"GB"},
+  "lines":[{"product_id":"product-7","product_name":"Cafetiere, 1 litre","sku":"KIT-CAF-1L",
+            "unit_price":{"currency_code":"USD","units":"18","nanos":990000000},
+            "tax_rate_basis_points":1000,"quantity":2}]}'
+```
+
+then read it back through the gateway with the id it returns:
+
+```sh
+curl localhost:8080/api/orders/<id>
 ```
 
 ```json
-{ "orderId": "1", "status": "confirmed",
+{ "orderId": "…", "status": "pending",
   "items": [ { "sku": "KIT-CAF-1L", "productName": "Cafetiere, 1 litre",
                "unitPrice": { "amount": 18.99, "currency": "USD" },
                "taxRatePercent": 10, "quantity": 2 } ],
   "total": { "amount": 41.78, "currency": "USD" } }
 ```
 
-The data is hard-coded — there is no database yet. What this proves is the path: REST
-reaches the gateway, the gateway calls order-service over gRPC using stubs generated from
-`proto/`, and the answer comes back translated. `make call` sends a request straight to a
-gRPC service, bypassing the gateway.
+The total is computed by the `Order` aggregate from its lines, not stored, so it cannot
+disagree with the items. `make call` talks to a gRPC service directly, bypassing the
+gateway; `make test` runs the domain tests and `make arch` the boundary rules.
 
 ## Project conventions
 

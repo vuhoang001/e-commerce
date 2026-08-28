@@ -28,31 +28,50 @@ namespace Ecommerce.Rpc.Order.V1 {
             "LnYxGhVjb21tb24vdjEvbW9uZXkucHJvdG8aH2dvb2dsZS9wcm90b2J1Zi90",
             "aW1lc3RhbXAucHJvdG8iLAoPR2V0T3JkZXJSZXF1ZXN0EhkKCG9yZGVyX2lk",
             "GAEgASgJUgdvcmRlcklkIj0KEEdldE9yZGVyUmVzcG9uc2USKQoFb3JkZXIY",
-            "ASABKAsyEy5ycGMub3JkZXIudjEuT3JkZXJSBW9yZGVyIoYCCgVPcmRlchIZ",
-            "CghvcmRlcl9pZBgBIAEoCVIHb3JkZXJJZBIfCgtjdXN0b21lcl9pZBgCIAEo",
-            "CVIKY3VzdG9tZXJJZBIxCgZzdGF0dXMYAyABKA4yGS5ycGMub3JkZXIudjEu",
-            "T3JkZXJTdGF0dXNSBnN0YXR1cxItCgVpdGVtcxgEIAMoCzIXLnJwYy5vcmRl",
-            "ci52MS5PcmRlckl0ZW1SBWl0ZW1zEiYKBXRvdGFsGAUgASgLMhAuY29tbW9u",
-            "LnYxLk1vbmV5UgV0b3RhbBI3CglwbGFjZWRfYXQYBiABKAsyGi5nb29nbGUu",
-            "cHJvdG9idWYuVGltZXN0YW1wUghwbGFjZWRBdCLfAQoJT3JkZXJJdGVtEh0K",
-            "CnByb2R1Y3RfaWQYASABKAlSCXByb2R1Y3RJZBIhCgxwcm9kdWN0X25hbWUY",
-            "AiABKAlSC3Byb2R1Y3ROYW1lEhAKA3NrdRgDIAEoCVIDc2t1Ei8KCnVuaXRf",
-            "cHJpY2UYBCABKAsyEC5jb21tb24udjEuTW9uZXlSCXVuaXRQcmljZRIxChV0",
-            "YXhfcmF0ZV9iYXNpc19wb2ludHMYBSABKAVSEnRheFJhdGVCYXNpc1BvaW50",
-            "cxIaCghxdWFudGl0eRgGIAEoBVIIcXVhbnRpdHkqfQoLT3JkZXJTdGF0dXMS",
-            "HAoYT1JERVJfU1RBVFVTX1VOU1BFQ0lGSUVEEAASGAoUT1JERVJfU1RBVFVT",
-            "X1BFTkRJTkcQARIaChZPUkRFUl9TVEFUVVNfQ09ORklSTUVEEAISGgoWT1JE",
-            "RVJfU1RBVFVTX0NBTkNFTExFRBADMlkKDE9yZGVyU2VydmljZRJJCghHZXRP",
-            "cmRlchIdLnJwYy5vcmRlci52MS5HZXRPcmRlclJlcXVlc3QaHi5ycGMub3Jk",
-            "ZXIudjEuR2V0T3JkZXJSZXNwb25zZUKBAQoQY29tLnJwYy5vcmRlci52MUIR",
-            "T3JkZXJTZXJ2aWNlUHJvdG9QAaICA1JPWKoCFkVjb21tZXJjZS5ScGMuT3Jk",
-            "ZXIuVjHKAgxScGNcT3JkZXJcVjHiAhhScGNcT3JkZXJcVjFcR1BCTWV0YWRh",
-            "dGHqAg5ScGM6Ok9yZGVyOjpWMWIGcHJvdG8z"));
+            "ASABKAsyEy5ycGMub3JkZXIudjEuT3JkZXJSBW9yZGVyIqoBChFQbGFjZU9y",
+            "ZGVyUmVxdWVzdBIfCgtjdXN0b21lcl9pZBgBIAEoCVIKY3VzdG9tZXJJZBJA",
+            "ChBzaGlwcGluZ19hZGRyZXNzGAIgASgLMhUucnBjLm9yZGVyLnYxLkFkZHJl",
+            "c3NSD3NoaXBwaW5nQWRkcmVzcxIyCgVsaW5lcxgDIAMoCzIcLnJwYy5vcmRl",
+            "ci52MS5QbGFjZU9yZGVyTGluZVIFbGluZXMiLwoSUGxhY2VPcmRlclJlc3Bv",
+            "bnNlEhkKCG9yZGVyX2lkGAEgASgJUgdvcmRlcklkIuQBCg5QbGFjZU9yZGVy",
+            "TGluZRIdCgpwcm9kdWN0X2lkGAEgASgJUglwcm9kdWN0SWQSIQoMcHJvZHVj",
+            "dF9uYW1lGAIgASgJUgtwcm9kdWN0TmFtZRIQCgNza3UYAyABKAlSA3NrdRIv",
+            "Cgp1bml0X3ByaWNlGAQgASgLMhAuY29tbW9uLnYxLk1vbmV5Ugl1bml0UHJp",
+            "Y2USMQoVdGF4X3JhdGVfYmFzaXNfcG9pbnRzGAUgASgFUhJ0YXhSYXRlQmFz",
+            "aXNQb2ludHMSGgoIcXVhbnRpdHkYBiABKAVSCHF1YW50aXR5IoQBCgdBZGRy",
+            "ZXNzEhQKBWxpbmUxGAEgASgJUgVsaW5lMRIUCgVsaW5lMhgCIAEoCVIFbGlu",
+            "ZTISEgoEY2l0eRgDIAEoCVIEY2l0eRIfCgtwb3N0YWxfY29kZRgEIAEoCVIK",
+            "cG9zdGFsQ29kZRIYCgdjb3VudHJ5GAUgASgJUgdjb3VudHJ5IoYCCgVPcmRl",
+            "chIZCghvcmRlcl9pZBgBIAEoCVIHb3JkZXJJZBIfCgtjdXN0b21lcl9pZBgC",
+            "IAEoCVIKY3VzdG9tZXJJZBIxCgZzdGF0dXMYAyABKA4yGS5ycGMub3JkZXIu",
+            "djEuT3JkZXJTdGF0dXNSBnN0YXR1cxItCgVpdGVtcxgEIAMoCzIXLnJwYy5v",
+            "cmRlci52MS5PcmRlckl0ZW1SBWl0ZW1zEiYKBXRvdGFsGAUgASgLMhAuY29t",
+            "bW9uLnYxLk1vbmV5UgV0b3RhbBI3CglwbGFjZWRfYXQYBiABKAsyGi5nb29n",
+            "bGUucHJvdG9idWYuVGltZXN0YW1wUghwbGFjZWRBdCLfAQoJT3JkZXJJdGVt",
+            "Eh0KCnByb2R1Y3RfaWQYASABKAlSCXByb2R1Y3RJZBIhCgxwcm9kdWN0X25h",
+            "bWUYAiABKAlSC3Byb2R1Y3ROYW1lEhAKA3NrdRgDIAEoCVIDc2t1Ei8KCnVu",
+            "aXRfcHJpY2UYBCABKAsyEC5jb21tb24udjEuTW9uZXlSCXVuaXRQcmljZRIx",
+            "ChV0YXhfcmF0ZV9iYXNpc19wb2ludHMYBSABKAVSEnRheFJhdGVCYXNpc1Bv",
+            "aW50cxIaCghxdWFudGl0eRgGIAEoBVIIcXVhbnRpdHkqfQoLT3JkZXJTdGF0",
+            "dXMSHAoYT1JERVJfU1RBVFVTX1VOU1BFQ0lGSUVEEAASGAoUT1JERVJfU1RB",
+            "VFVTX1BFTkRJTkcQARIaChZPUkRFUl9TVEFUVVNfQ09ORklSTUVEEAISGgoW",
+            "T1JERVJfU1RBVFVTX0NBTkNFTExFRBADMqoBCgxPcmRlclNlcnZpY2USSQoI",
+            "R2V0T3JkZXISHS5ycGMub3JkZXIudjEuR2V0T3JkZXJSZXF1ZXN0Gh4ucnBj",
+            "Lm9yZGVyLnYxLkdldE9yZGVyUmVzcG9uc2USTwoKUGxhY2VPcmRlchIfLnJw",
+            "Yy5vcmRlci52MS5QbGFjZU9yZGVyUmVxdWVzdBogLnJwYy5vcmRlci52MS5Q",
+            "bGFjZU9yZGVyUmVzcG9uc2VCgQEKEGNvbS5ycGMub3JkZXIudjFCEU9yZGVy",
+            "U2VydmljZVByb3RvUAGiAgNST1iqAhZFY29tbWVyY2UuUnBjLk9yZGVyLlYx",
+            "ygIMUnBjXE9yZGVyXFYx4gIYUnBjXE9yZGVyXFYxXEdQQk1ldGFkYXRh6gIO",
+            "UnBjOjpPcmRlcjo6VjFiBnByb3RvMw=="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { global::Ecommerce.Common.V1.MoneyReflection.Descriptor, global::Google.Protobuf.WellKnownTypes.TimestampReflection.Descriptor, },
           new pbr::GeneratedClrTypeInfo(new[] {typeof(global::Ecommerce.Rpc.Order.V1.OrderStatus), }, null, new pbr::GeneratedClrTypeInfo[] {
             new pbr::GeneratedClrTypeInfo(typeof(global::Ecommerce.Rpc.Order.V1.GetOrderRequest), global::Ecommerce.Rpc.Order.V1.GetOrderRequest.Parser, new[]{ "OrderId" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Ecommerce.Rpc.Order.V1.GetOrderResponse), global::Ecommerce.Rpc.Order.V1.GetOrderResponse.Parser, new[]{ "Order" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Ecommerce.Rpc.Order.V1.PlaceOrderRequest), global::Ecommerce.Rpc.Order.V1.PlaceOrderRequest.Parser, new[]{ "CustomerId", "ShippingAddress", "Lines" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Ecommerce.Rpc.Order.V1.PlaceOrderResponse), global::Ecommerce.Rpc.Order.V1.PlaceOrderResponse.Parser, new[]{ "OrderId" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Ecommerce.Rpc.Order.V1.PlaceOrderLine), global::Ecommerce.Rpc.Order.V1.PlaceOrderLine.Parser, new[]{ "ProductId", "ProductName", "Sku", "UnitPrice", "TaxRateBasisPoints", "Quantity" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Ecommerce.Rpc.Order.V1.Address), global::Ecommerce.Rpc.Order.V1.Address.Parser, new[]{ "Line1", "Line2", "City", "PostalCode", "Country" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Ecommerce.Rpc.Order.V1.Order), global::Ecommerce.Rpc.Order.V1.Order.Parser, new[]{ "OrderId", "CustomerId", "Status", "Items", "Total", "PlacedAt" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Ecommerce.Rpc.Order.V1.OrderItem), global::Ecommerce.Rpc.Order.V1.OrderItem.Parser, new[]{ "ProductId", "ProductName", "Sku", "UnitPrice", "TaxRateBasisPoints", "Quantity" }, null, null, null, null)
           }));
@@ -477,6 +496,1223 @@ namespace Ecommerce.Rpc.Order.V1 {
   }
 
   [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
+  public sealed partial class PlaceOrderRequest : pb::IMessage<PlaceOrderRequest>
+  #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      , pb::IBufferMessage
+  #endif
+  {
+    private static readonly pb::MessageParser<PlaceOrderRequest> _parser = new pb::MessageParser<PlaceOrderRequest>(() => new PlaceOrderRequest());
+    private pb::UnknownFieldSet _unknownFields;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pb::MessageParser<PlaceOrderRequest> Parser { get { return _parser; } }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::Ecommerce.Rpc.Order.V1.OrderServiceReflection.Descriptor.MessageTypes[2]; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public PlaceOrderRequest() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public PlaceOrderRequest(PlaceOrderRequest other) : this() {
+      customerId_ = other.customerId_;
+      shippingAddress_ = other.shippingAddress_ != null ? other.shippingAddress_.Clone() : null;
+      lines_ = other.lines_.Clone();
+      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public PlaceOrderRequest Clone() {
+      return new PlaceOrderRequest(this);
+    }
+
+    /// <summary>Field number for the "customer_id" field.</summary>
+    public const int CustomerIdFieldNumber = 1;
+    private string customerId_ = "";
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public string CustomerId {
+      get { return customerId_; }
+      set {
+        customerId_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
+    /// <summary>Field number for the "shipping_address" field.</summary>
+    public const int ShippingAddressFieldNumber = 2;
+    private global::Ecommerce.Rpc.Order.V1.Address shippingAddress_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::Ecommerce.Rpc.Order.V1.Address ShippingAddress {
+      get { return shippingAddress_; }
+      set {
+        shippingAddress_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "lines" field.</summary>
+    public const int LinesFieldNumber = 3;
+    private static readonly pb::FieldCodec<global::Ecommerce.Rpc.Order.V1.PlaceOrderLine> _repeated_lines_codec
+        = pb::FieldCodec.ForMessage(26, global::Ecommerce.Rpc.Order.V1.PlaceOrderLine.Parser);
+    private readonly pbc::RepeatedField<global::Ecommerce.Rpc.Order.V1.PlaceOrderLine> lines_ = new pbc::RepeatedField<global::Ecommerce.Rpc.Order.V1.PlaceOrderLine>();
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public pbc::RepeatedField<global::Ecommerce.Rpc.Order.V1.PlaceOrderLine> Lines {
+      get { return lines_; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override bool Equals(object other) {
+      return Equals(other as PlaceOrderRequest);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public bool Equals(PlaceOrderRequest other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      if (CustomerId != other.CustomerId) return false;
+      if (!object.Equals(ShippingAddress, other.ShippingAddress)) return false;
+      if(!lines_.Equals(other.lines_)) return false;
+      return Equals(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override int GetHashCode() {
+      int hash = 1;
+      if (CustomerId.Length != 0) hash ^= CustomerId.GetHashCode();
+      if (shippingAddress_ != null) hash ^= ShippingAddress.GetHashCode();
+      hash ^= lines_.GetHashCode();
+      if (_unknownFields != null) {
+        hash ^= _unknownFields.GetHashCode();
+      }
+      return hash;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void WriteTo(pb::CodedOutputStream output) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      output.WriteRawMessage(this);
+    #else
+      if (CustomerId.Length != 0) {
+        output.WriteRawTag(10);
+        output.WriteString(CustomerId);
+      }
+      if (shippingAddress_ != null) {
+        output.WriteRawTag(18);
+        output.WriteMessage(ShippingAddress);
+      }
+      lines_.WriteTo(output, _repeated_lines_codec);
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(output);
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
+      if (CustomerId.Length != 0) {
+        output.WriteRawTag(10);
+        output.WriteString(CustomerId);
+      }
+      if (shippingAddress_ != null) {
+        output.WriteRawTag(18);
+        output.WriteMessage(ShippingAddress);
+      }
+      lines_.WriteTo(ref output, _repeated_lines_codec);
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(ref output);
+      }
+    }
+    #endif
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public int CalculateSize() {
+      int size = 0;
+      if (CustomerId.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(CustomerId);
+      }
+      if (shippingAddress_ != null) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(ShippingAddress);
+      }
+      size += lines_.CalculateSize(_repeated_lines_codec);
+      if (_unknownFields != null) {
+        size += _unknownFields.CalculateSize();
+      }
+      return size;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(PlaceOrderRequest other) {
+      if (other == null) {
+        return;
+      }
+      if (other.CustomerId.Length != 0) {
+        CustomerId = other.CustomerId;
+      }
+      if (other.shippingAddress_ != null) {
+        if (shippingAddress_ == null) {
+          ShippingAddress = new global::Ecommerce.Rpc.Order.V1.Address();
+        }
+        ShippingAddress.MergeFrom(other.ShippingAddress);
+      }
+      lines_.Add(other.lines_);
+      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(pb::CodedInputStream input) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      input.ReadRawMessage(this);
+    #else
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+      if ((tag & 7) == 4) {
+        // Abort on any end group tag.
+        return;
+      }
+      switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
+            break;
+          case 10: {
+            CustomerId = input.ReadString();
+            break;
+          }
+          case 18: {
+            if (shippingAddress_ == null) {
+              ShippingAddress = new global::Ecommerce.Rpc.Order.V1.Address();
+            }
+            input.ReadMessage(ShippingAddress);
+            break;
+          }
+          case 26: {
+            lines_.AddEntriesFrom(input, _repeated_lines_codec);
+            break;
+          }
+        }
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+      if ((tag & 7) == 4) {
+        // Abort on any end group tag.
+        return;
+      }
+      switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
+            break;
+          case 10: {
+            CustomerId = input.ReadString();
+            break;
+          }
+          case 18: {
+            if (shippingAddress_ == null) {
+              ShippingAddress = new global::Ecommerce.Rpc.Order.V1.Address();
+            }
+            input.ReadMessage(ShippingAddress);
+            break;
+          }
+          case 26: {
+            lines_.AddEntriesFrom(ref input, _repeated_lines_codec);
+            break;
+          }
+        }
+      }
+    }
+    #endif
+
+  }
+
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
+  public sealed partial class PlaceOrderResponse : pb::IMessage<PlaceOrderResponse>
+  #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      , pb::IBufferMessage
+  #endif
+  {
+    private static readonly pb::MessageParser<PlaceOrderResponse> _parser = new pb::MessageParser<PlaceOrderResponse>(() => new PlaceOrderResponse());
+    private pb::UnknownFieldSet _unknownFields;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pb::MessageParser<PlaceOrderResponse> Parser { get { return _parser; } }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::Ecommerce.Rpc.Order.V1.OrderServiceReflection.Descriptor.MessageTypes[3]; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public PlaceOrderResponse() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public PlaceOrderResponse(PlaceOrderResponse other) : this() {
+      orderId_ = other.orderId_;
+      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public PlaceOrderResponse Clone() {
+      return new PlaceOrderResponse(this);
+    }
+
+    /// <summary>Field number for the "order_id" field.</summary>
+    public const int OrderIdFieldNumber = 1;
+    private string orderId_ = "";
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public string OrderId {
+      get { return orderId_; }
+      set {
+        orderId_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override bool Equals(object other) {
+      return Equals(other as PlaceOrderResponse);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public bool Equals(PlaceOrderResponse other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      if (OrderId != other.OrderId) return false;
+      return Equals(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override int GetHashCode() {
+      int hash = 1;
+      if (OrderId.Length != 0) hash ^= OrderId.GetHashCode();
+      if (_unknownFields != null) {
+        hash ^= _unknownFields.GetHashCode();
+      }
+      return hash;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void WriteTo(pb::CodedOutputStream output) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      output.WriteRawMessage(this);
+    #else
+      if (OrderId.Length != 0) {
+        output.WriteRawTag(10);
+        output.WriteString(OrderId);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(output);
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
+      if (OrderId.Length != 0) {
+        output.WriteRawTag(10);
+        output.WriteString(OrderId);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(ref output);
+      }
+    }
+    #endif
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public int CalculateSize() {
+      int size = 0;
+      if (OrderId.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(OrderId);
+      }
+      if (_unknownFields != null) {
+        size += _unknownFields.CalculateSize();
+      }
+      return size;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(PlaceOrderResponse other) {
+      if (other == null) {
+        return;
+      }
+      if (other.OrderId.Length != 0) {
+        OrderId = other.OrderId;
+      }
+      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(pb::CodedInputStream input) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      input.ReadRawMessage(this);
+    #else
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+      if ((tag & 7) == 4) {
+        // Abort on any end group tag.
+        return;
+      }
+      switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
+            break;
+          case 10: {
+            OrderId = input.ReadString();
+            break;
+          }
+        }
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+      if ((tag & 7) == 4) {
+        // Abort on any end group tag.
+        return;
+      }
+      switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
+            break;
+          case 10: {
+            OrderId = input.ReadString();
+            break;
+          }
+        }
+      }
+    }
+    #endif
+
+  }
+
+  /// <summary>
+  /// The item data the caller supplies at checkout.
+  ///
+  /// KNOWN GAP, closed in month 2: the caller sends the name, price and tax rate, so a
+  /// client could name its own price. PLAN.md month 2 adds order-service's local product
+  /// read model and price validation at checkout, after which this message carries only
+  /// product_id and quantity.
+  /// </summary>
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
+  public sealed partial class PlaceOrderLine : pb::IMessage<PlaceOrderLine>
+  #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      , pb::IBufferMessage
+  #endif
+  {
+    private static readonly pb::MessageParser<PlaceOrderLine> _parser = new pb::MessageParser<PlaceOrderLine>(() => new PlaceOrderLine());
+    private pb::UnknownFieldSet _unknownFields;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pb::MessageParser<PlaceOrderLine> Parser { get { return _parser; } }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::Ecommerce.Rpc.Order.V1.OrderServiceReflection.Descriptor.MessageTypes[4]; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public PlaceOrderLine() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public PlaceOrderLine(PlaceOrderLine other) : this() {
+      productId_ = other.productId_;
+      productName_ = other.productName_;
+      sku_ = other.sku_;
+      unitPrice_ = other.unitPrice_ != null ? other.unitPrice_.Clone() : null;
+      taxRateBasisPoints_ = other.taxRateBasisPoints_;
+      quantity_ = other.quantity_;
+      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public PlaceOrderLine Clone() {
+      return new PlaceOrderLine(this);
+    }
+
+    /// <summary>Field number for the "product_id" field.</summary>
+    public const int ProductIdFieldNumber = 1;
+    private string productId_ = "";
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public string ProductId {
+      get { return productId_; }
+      set {
+        productId_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
+    /// <summary>Field number for the "product_name" field.</summary>
+    public const int ProductNameFieldNumber = 2;
+    private string productName_ = "";
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public string ProductName {
+      get { return productName_; }
+      set {
+        productName_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
+    /// <summary>Field number for the "sku" field.</summary>
+    public const int SkuFieldNumber = 3;
+    private string sku_ = "";
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public string Sku {
+      get { return sku_; }
+      set {
+        sku_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
+    /// <summary>Field number for the "unit_price" field.</summary>
+    public const int UnitPriceFieldNumber = 4;
+    private global::Ecommerce.Common.V1.Money unitPrice_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::Ecommerce.Common.V1.Money UnitPrice {
+      get { return unitPrice_; }
+      set {
+        unitPrice_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "tax_rate_basis_points" field.</summary>
+    public const int TaxRateBasisPointsFieldNumber = 5;
+    private int taxRateBasisPoints_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public int TaxRateBasisPoints {
+      get { return taxRateBasisPoints_; }
+      set {
+        taxRateBasisPoints_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "quantity" field.</summary>
+    public const int QuantityFieldNumber = 6;
+    private int quantity_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public int Quantity {
+      get { return quantity_; }
+      set {
+        quantity_ = value;
+      }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override bool Equals(object other) {
+      return Equals(other as PlaceOrderLine);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public bool Equals(PlaceOrderLine other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      if (ProductId != other.ProductId) return false;
+      if (ProductName != other.ProductName) return false;
+      if (Sku != other.Sku) return false;
+      if (!object.Equals(UnitPrice, other.UnitPrice)) return false;
+      if (TaxRateBasisPoints != other.TaxRateBasisPoints) return false;
+      if (Quantity != other.Quantity) return false;
+      return Equals(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override int GetHashCode() {
+      int hash = 1;
+      if (ProductId.Length != 0) hash ^= ProductId.GetHashCode();
+      if (ProductName.Length != 0) hash ^= ProductName.GetHashCode();
+      if (Sku.Length != 0) hash ^= Sku.GetHashCode();
+      if (unitPrice_ != null) hash ^= UnitPrice.GetHashCode();
+      if (TaxRateBasisPoints != 0) hash ^= TaxRateBasisPoints.GetHashCode();
+      if (Quantity != 0) hash ^= Quantity.GetHashCode();
+      if (_unknownFields != null) {
+        hash ^= _unknownFields.GetHashCode();
+      }
+      return hash;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void WriteTo(pb::CodedOutputStream output) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      output.WriteRawMessage(this);
+    #else
+      if (ProductId.Length != 0) {
+        output.WriteRawTag(10);
+        output.WriteString(ProductId);
+      }
+      if (ProductName.Length != 0) {
+        output.WriteRawTag(18);
+        output.WriteString(ProductName);
+      }
+      if (Sku.Length != 0) {
+        output.WriteRawTag(26);
+        output.WriteString(Sku);
+      }
+      if (unitPrice_ != null) {
+        output.WriteRawTag(34);
+        output.WriteMessage(UnitPrice);
+      }
+      if (TaxRateBasisPoints != 0) {
+        output.WriteRawTag(40);
+        output.WriteInt32(TaxRateBasisPoints);
+      }
+      if (Quantity != 0) {
+        output.WriteRawTag(48);
+        output.WriteInt32(Quantity);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(output);
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
+      if (ProductId.Length != 0) {
+        output.WriteRawTag(10);
+        output.WriteString(ProductId);
+      }
+      if (ProductName.Length != 0) {
+        output.WriteRawTag(18);
+        output.WriteString(ProductName);
+      }
+      if (Sku.Length != 0) {
+        output.WriteRawTag(26);
+        output.WriteString(Sku);
+      }
+      if (unitPrice_ != null) {
+        output.WriteRawTag(34);
+        output.WriteMessage(UnitPrice);
+      }
+      if (TaxRateBasisPoints != 0) {
+        output.WriteRawTag(40);
+        output.WriteInt32(TaxRateBasisPoints);
+      }
+      if (Quantity != 0) {
+        output.WriteRawTag(48);
+        output.WriteInt32(Quantity);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(ref output);
+      }
+    }
+    #endif
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public int CalculateSize() {
+      int size = 0;
+      if (ProductId.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(ProductId);
+      }
+      if (ProductName.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(ProductName);
+      }
+      if (Sku.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(Sku);
+      }
+      if (unitPrice_ != null) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(UnitPrice);
+      }
+      if (TaxRateBasisPoints != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeInt32Size(TaxRateBasisPoints);
+      }
+      if (Quantity != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeInt32Size(Quantity);
+      }
+      if (_unknownFields != null) {
+        size += _unknownFields.CalculateSize();
+      }
+      return size;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(PlaceOrderLine other) {
+      if (other == null) {
+        return;
+      }
+      if (other.ProductId.Length != 0) {
+        ProductId = other.ProductId;
+      }
+      if (other.ProductName.Length != 0) {
+        ProductName = other.ProductName;
+      }
+      if (other.Sku.Length != 0) {
+        Sku = other.Sku;
+      }
+      if (other.unitPrice_ != null) {
+        if (unitPrice_ == null) {
+          UnitPrice = new global::Ecommerce.Common.V1.Money();
+        }
+        UnitPrice.MergeFrom(other.UnitPrice);
+      }
+      if (other.TaxRateBasisPoints != 0) {
+        TaxRateBasisPoints = other.TaxRateBasisPoints;
+      }
+      if (other.Quantity != 0) {
+        Quantity = other.Quantity;
+      }
+      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(pb::CodedInputStream input) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      input.ReadRawMessage(this);
+    #else
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+      if ((tag & 7) == 4) {
+        // Abort on any end group tag.
+        return;
+      }
+      switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
+            break;
+          case 10: {
+            ProductId = input.ReadString();
+            break;
+          }
+          case 18: {
+            ProductName = input.ReadString();
+            break;
+          }
+          case 26: {
+            Sku = input.ReadString();
+            break;
+          }
+          case 34: {
+            if (unitPrice_ == null) {
+              UnitPrice = new global::Ecommerce.Common.V1.Money();
+            }
+            input.ReadMessage(UnitPrice);
+            break;
+          }
+          case 40: {
+            TaxRateBasisPoints = input.ReadInt32();
+            break;
+          }
+          case 48: {
+            Quantity = input.ReadInt32();
+            break;
+          }
+        }
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+      if ((tag & 7) == 4) {
+        // Abort on any end group tag.
+        return;
+      }
+      switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
+            break;
+          case 10: {
+            ProductId = input.ReadString();
+            break;
+          }
+          case 18: {
+            ProductName = input.ReadString();
+            break;
+          }
+          case 26: {
+            Sku = input.ReadString();
+            break;
+          }
+          case 34: {
+            if (unitPrice_ == null) {
+              UnitPrice = new global::Ecommerce.Common.V1.Money();
+            }
+            input.ReadMessage(UnitPrice);
+            break;
+          }
+          case 40: {
+            TaxRateBasisPoints = input.ReadInt32();
+            break;
+          }
+          case 48: {
+            Quantity = input.ReadInt32();
+            break;
+          }
+        }
+      }
+    }
+    #endif
+
+  }
+
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
+  public sealed partial class Address : pb::IMessage<Address>
+  #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      , pb::IBufferMessage
+  #endif
+  {
+    private static readonly pb::MessageParser<Address> _parser = new pb::MessageParser<Address>(() => new Address());
+    private pb::UnknownFieldSet _unknownFields;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pb::MessageParser<Address> Parser { get { return _parser; } }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::Ecommerce.Rpc.Order.V1.OrderServiceReflection.Descriptor.MessageTypes[5]; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public Address() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public Address(Address other) : this() {
+      line1_ = other.line1_;
+      line2_ = other.line2_;
+      city_ = other.city_;
+      postalCode_ = other.postalCode_;
+      country_ = other.country_;
+      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public Address Clone() {
+      return new Address(this);
+    }
+
+    /// <summary>Field number for the "line1" field.</summary>
+    public const int Line1FieldNumber = 1;
+    private string line1_ = "";
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public string Line1 {
+      get { return line1_; }
+      set {
+        line1_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
+    /// <summary>Field number for the "line2" field.</summary>
+    public const int Line2FieldNumber = 2;
+    private string line2_ = "";
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public string Line2 {
+      get { return line2_; }
+      set {
+        line2_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
+    /// <summary>Field number for the "city" field.</summary>
+    public const int CityFieldNumber = 3;
+    private string city_ = "";
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public string City {
+      get { return city_; }
+      set {
+        city_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
+    /// <summary>Field number for the "postal_code" field.</summary>
+    public const int PostalCodeFieldNumber = 4;
+    private string postalCode_ = "";
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public string PostalCode {
+      get { return postalCode_; }
+      set {
+        postalCode_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
+    /// <summary>Field number for the "country" field.</summary>
+    public const int CountryFieldNumber = 5;
+    private string country_ = "";
+    /// <summary>
+    /// ISO 3166-1 alpha-2.
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public string Country {
+      get { return country_; }
+      set {
+        country_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override bool Equals(object other) {
+      return Equals(other as Address);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public bool Equals(Address other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      if (Line1 != other.Line1) return false;
+      if (Line2 != other.Line2) return false;
+      if (City != other.City) return false;
+      if (PostalCode != other.PostalCode) return false;
+      if (Country != other.Country) return false;
+      return Equals(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override int GetHashCode() {
+      int hash = 1;
+      if (Line1.Length != 0) hash ^= Line1.GetHashCode();
+      if (Line2.Length != 0) hash ^= Line2.GetHashCode();
+      if (City.Length != 0) hash ^= City.GetHashCode();
+      if (PostalCode.Length != 0) hash ^= PostalCode.GetHashCode();
+      if (Country.Length != 0) hash ^= Country.GetHashCode();
+      if (_unknownFields != null) {
+        hash ^= _unknownFields.GetHashCode();
+      }
+      return hash;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void WriteTo(pb::CodedOutputStream output) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      output.WriteRawMessage(this);
+    #else
+      if (Line1.Length != 0) {
+        output.WriteRawTag(10);
+        output.WriteString(Line1);
+      }
+      if (Line2.Length != 0) {
+        output.WriteRawTag(18);
+        output.WriteString(Line2);
+      }
+      if (City.Length != 0) {
+        output.WriteRawTag(26);
+        output.WriteString(City);
+      }
+      if (PostalCode.Length != 0) {
+        output.WriteRawTag(34);
+        output.WriteString(PostalCode);
+      }
+      if (Country.Length != 0) {
+        output.WriteRawTag(42);
+        output.WriteString(Country);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(output);
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
+      if (Line1.Length != 0) {
+        output.WriteRawTag(10);
+        output.WriteString(Line1);
+      }
+      if (Line2.Length != 0) {
+        output.WriteRawTag(18);
+        output.WriteString(Line2);
+      }
+      if (City.Length != 0) {
+        output.WriteRawTag(26);
+        output.WriteString(City);
+      }
+      if (PostalCode.Length != 0) {
+        output.WriteRawTag(34);
+        output.WriteString(PostalCode);
+      }
+      if (Country.Length != 0) {
+        output.WriteRawTag(42);
+        output.WriteString(Country);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(ref output);
+      }
+    }
+    #endif
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public int CalculateSize() {
+      int size = 0;
+      if (Line1.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(Line1);
+      }
+      if (Line2.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(Line2);
+      }
+      if (City.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(City);
+      }
+      if (PostalCode.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(PostalCode);
+      }
+      if (Country.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(Country);
+      }
+      if (_unknownFields != null) {
+        size += _unknownFields.CalculateSize();
+      }
+      return size;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(Address other) {
+      if (other == null) {
+        return;
+      }
+      if (other.Line1.Length != 0) {
+        Line1 = other.Line1;
+      }
+      if (other.Line2.Length != 0) {
+        Line2 = other.Line2;
+      }
+      if (other.City.Length != 0) {
+        City = other.City;
+      }
+      if (other.PostalCode.Length != 0) {
+        PostalCode = other.PostalCode;
+      }
+      if (other.Country.Length != 0) {
+        Country = other.Country;
+      }
+      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(pb::CodedInputStream input) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      input.ReadRawMessage(this);
+    #else
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+      if ((tag & 7) == 4) {
+        // Abort on any end group tag.
+        return;
+      }
+      switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
+            break;
+          case 10: {
+            Line1 = input.ReadString();
+            break;
+          }
+          case 18: {
+            Line2 = input.ReadString();
+            break;
+          }
+          case 26: {
+            City = input.ReadString();
+            break;
+          }
+          case 34: {
+            PostalCode = input.ReadString();
+            break;
+          }
+          case 42: {
+            Country = input.ReadString();
+            break;
+          }
+        }
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+      if ((tag & 7) == 4) {
+        // Abort on any end group tag.
+        return;
+      }
+      switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
+            break;
+          case 10: {
+            Line1 = input.ReadString();
+            break;
+          }
+          case 18: {
+            Line2 = input.ReadString();
+            break;
+          }
+          case 26: {
+            City = input.ReadString();
+            break;
+          }
+          case 34: {
+            PostalCode = input.ReadString();
+            break;
+          }
+          case 42: {
+            Country = input.ReadString();
+            break;
+          }
+        }
+      }
+    }
+    #endif
+
+  }
+
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
   public sealed partial class Order : pb::IMessage<Order>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
@@ -491,7 +1727,7 @@ namespace Ecommerce.Rpc.Order.V1 {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Ecommerce.Rpc.Order.V1.OrderServiceReflection.Descriptor.MessageTypes[2]; }
+      get { return global::Ecommerce.Rpc.Order.V1.OrderServiceReflection.Descriptor.MessageTypes[6]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -897,7 +2133,7 @@ namespace Ecommerce.Rpc.Order.V1 {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Ecommerce.Rpc.Order.V1.OrderServiceReflection.Descriptor.MessageTypes[3]; }
+      get { return global::Ecommerce.Rpc.Order.V1.OrderServiceReflection.Descriptor.MessageTypes[7]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]

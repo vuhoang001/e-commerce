@@ -1,0 +1,35 @@
+# Infrastructure that starts once and stays up. Restarting a service must never mean
+# restarting Kafka or losing a database.
+#
+# Postgres only for now. The rest arrives with the phase that needs it, rather than being
+# declared early and left idle:
+#   Kafka + Schema Registry   month 2
+#   Redis                     month 2
+#   OpenSearch                month 2
+#   OTel Collector + Tempo    month 0.5, with the two-hop trace
+#   MinIO                     month 4.5
+
+name: ecommerce-polyglot
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: ecommerce-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ordering
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      # Services wait on this rather than on a timer. A sleep long enough to be safe is
+      # always longer than necessary, and still occasionally too short.
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ordering"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  postgres-data:

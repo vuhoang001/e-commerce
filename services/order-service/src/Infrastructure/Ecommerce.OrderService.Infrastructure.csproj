@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Implements what Domain declares. The dependency points inwards: Infrastructure
+       knows about Domain, Domain knows nothing about EF Core or Postgres. -->
+
+  <PropertyGroup>
+    <RootNamespace>Ecommerce.OrderService.Infrastructure</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Domain/Ecommerce.OrderService.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

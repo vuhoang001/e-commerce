@@ -52,6 +52,10 @@ namespace Ecommerce.Rpc.Order.V1 {
     static readonly grpc::Marshaller<global::Ecommerce.Rpc.Order.V1.GetOrderRequest> __Marshaller_rpc_order_v1_GetOrderRequest = grpc::Marshallers.Create(__Helper_SerializeMessage, context => __Helper_DeserializeMessage(context, global::Ecommerce.Rpc.Order.V1.GetOrderRequest.Parser));
     [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
     static readonly grpc::Marshaller<global::Ecommerce.Rpc.Order.V1.GetOrderResponse> __Marshaller_rpc_order_v1_GetOrderResponse = grpc::Marshallers.Create(__Helper_SerializeMessage, context => __Helper_DeserializeMessage(context, global::Ecommerce.Rpc.Order.V1.GetOrderResponse.Parser));
+    [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+    static readonly grpc::Marshaller<global::Ecommerce.Rpc.Order.V1.PlaceOrderRequest> __Marshaller_rpc_order_v1_PlaceOrderRequest = grpc::Marshallers.Create(__Helper_SerializeMessage, context => __Helper_DeserializeMessage(context, global::Ecommerce.Rpc.Order.V1.PlaceOrderRequest.Parser));
+    [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+    static readonly grpc::Marshaller<global::Ecommerce.Rpc.Order.V1.PlaceOrderResponse> __Marshaller_rpc_order_v1_PlaceOrderResponse = grpc::Marshallers.Create(__Helper_SerializeMessage, context => __Helper_DeserializeMessage(context, global::Ecommerce.Rpc.Order.V1.PlaceOrderResponse.Parser));
 
     [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
     static readonly grpc::Method<global::Ecommerce.Rpc.Order.V1.GetOrderRequest, global::Ecommerce.Rpc.Order.V1.GetOrderResponse> __Method_GetOrder = new grpc::Method<global::Ecommerce.Rpc.Order.V1.GetOrderRequest, global::Ecommerce.Rpc.Order.V1.GetOrderResponse>(
@@ -60,6 +64,14 @@ namespace Ecommerce.Rpc.Order.V1 {
         "GetOrder",
         __Marshaller_rpc_order_v1_GetOrderRequest,
         __Marshaller_rpc_order_v1_GetOrderResponse);
+
+    [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+    static readonly grpc::Method<global::Ecommerce.Rpc.Order.V1.PlaceOrderRequest, global::Ecommerce.Rpc.Order.V1.PlaceOrderResponse> __Method_PlaceOrder = new grpc::Method<global::Ecommerce.Rpc.Order.V1.PlaceOrderRequest, global::Ecommerce.Rpc.Order.V1.PlaceOrderResponse>(
+        grpc::MethodType.Unary,
+        __ServiceName,
+        "PlaceOrder",
+        __Marshaller_rpc_order_v1_PlaceOrderRequest,
+        __Marshaller_rpc_order_v1_PlaceOrderResponse);
 
     /// <summary>Service descriptor</summary>
     public static global::Google.Protobuf.Reflection.ServiceDescriptor Descriptor
@@ -80,6 +92,18 @@ namespace Ecommerce.Rpc.Order.V1 {
       /// <returns>The response to send back to the client (wrapped by a task).</returns>
       [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
       public virtual global::System.Threading.Tasks.Task<global::Ecommerce.Rpc.Order.V1.GetOrderResponse> GetOrder(global::Ecommerce.Rpc.Order.V1.GetOrderRequest request, grpc::ServerCallContext context)
+      {
+        throw new grpc::RpcException(new grpc::Status(grpc::StatusCode.Unimplemented, ""));
+      }
+
+      /// <summary>
+      /// Places an order and returns its id.
+      /// </summary>
+      /// <param name="request">The request received from the client.</param>
+      /// <param name="context">The context of the server-side call handler being invoked.</param>
+      /// <returns>The response to send back to the client (wrapped by a task).</returns>
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual global::System.Threading.Tasks.Task<global::Ecommerce.Rpc.Order.V1.PlaceOrderResponse> PlaceOrder(global::Ecommerce.Rpc.Order.V1.PlaceOrderRequest request, grpc::ServerCallContext context)
       {
         throw new grpc::RpcException(new grpc::Status(grpc::StatusCode.Unimplemented, ""));
       }
@@ -165,6 +189,54 @@ namespace Ecommerce.Rpc.Order.V1 {
       {
         return CallInvoker.AsyncUnaryCall(__Method_GetOrder, null, options, request);
       }
+      /// <summary>
+      /// Places an order and returns its id.
+      /// </summary>
+      /// <param name="request">The request to send to the server.</param>
+      /// <param name="headers">The initial metadata to send with the call. This parameter is optional.</param>
+      /// <param name="deadline">An optional deadline for the call. The call will be cancelled if deadline is hit.</param>
+      /// <param name="cancellationToken">An optional token for canceling the call.</param>
+      /// <returns>The response received from the server.</returns>
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual global::Ecommerce.Rpc.Order.V1.PlaceOrderResponse PlaceOrder(global::Ecommerce.Rpc.Order.V1.PlaceOrderRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      {
+        return PlaceOrder(request, new grpc::CallOptions(headers, deadline, cancellationToken));
+      }
+      /// <summary>
+      /// Places an order and returns its id.
+      /// </summary>
+      /// <param name="request">The request to send to the server.</param>
+      /// <param name="options">The options for the call.</param>
+      /// <returns>The response received from the server.</returns>
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual global::Ecommerce.Rpc.Order.V1.PlaceOrderResponse PlaceOrder(global::Ecommerce.Rpc.Order.V1.PlaceOrderRequest request, grpc::CallOptions options)
+      {
+        return CallInvoker.BlockingUnaryCall(__Method_PlaceOrder, null, options, request);
+      }
+      /// <summary>
+      /// Places an order and returns its id.
+      /// </summary>
+      /// <param name="request">The request to send to the server.</param>
+      /// <param name="headers">The initial metadata to send with the call. This parameter is optional.</param>
+      /// <param name="deadline">An optional deadline for the call. The call will be cancelled if deadline is hit.</param>
+      /// <param name="cancellationToken">An optional token for canceling the call.</param>
+      /// <returns>The call object.</returns>
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual grpc::AsyncUnaryCall<global::Ecommerce.Rpc.Order.V1.PlaceOrderResponse> PlaceOrderAsync(global::Ecommerce.Rpc.Order.V1.PlaceOrderRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      {
+        return PlaceOrderAsync(request, new grpc::CallOptions(headers, deadline, cancellationToken));
+      }
+      /// <summary>
+      /// Places an order and returns its id.
+      /// </summary>
+      /// <param name="request">The request to send to the server.</param>
+      /// <param name="options">The options for the call.</param>
+      /// <returns>The call object.</returns>
+      [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
+      public virtual grpc::AsyncUnaryCall<global::Ecommerce.Rpc.Order.V1.PlaceOrderResponse> PlaceOrderAsync(global::Ecommerce.Rpc.Order.V1.PlaceOrderRequest request, grpc::CallOptions options)
+      {
+        return CallInvoker.AsyncUnaryCall(__Method_PlaceOrder, null, options, request);
+      }
       /// <summary>Creates a new instance of client from given <c>ClientBaseConfiguration</c>.</summary>
       [global::System.CodeDom.Compiler.GeneratedCode("grpc_csharp_plugin", null)]
       protected override OrderServiceClient NewInstance(ClientBaseConfiguration configuration)
@@ -179,7 +251,8 @@ namespace Ecommerce.Rpc.Order.V1 {
     public static grpc::ServerServiceDefinition BindService(OrderServiceBase serviceImpl)
     {
       return grpc::ServerServiceDefinition.CreateBuilder()
-          .AddMethod(__Method_GetOrder, serviceImpl.GetOrder).Build();
+          .AddMethod(__Method_GetOrder, serviceImpl.GetOrder)
+          .AddMethod(__Method_PlaceOrder, serviceImpl.PlaceOrder).Build();
     }
 
     /// <summary>Register service method with a service binder with or without implementation. Useful when customizing the service binding logic.
@@ -190,6 +263,7 @@ namespace Ecommerce.Rpc.Order.V1 {
     public static void BindService(grpc::ServiceBinderBase serviceBinder, OrderServiceBase serviceImpl)
     {
       serviceBinder.AddMethod(__Method_GetOrder, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::Ecommerce.Rpc.Order.V1.GetOrderRequest, global::Ecommerce.Rpc.Order.V1.GetOrderResponse>(serviceImpl.GetOrder));
+      serviceBinder.AddMethod(__Method_PlaceOrder, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::Ecommerce.Rpc.Order.V1.PlaceOrderRequest, global::Ecommerce.Rpc.Order.V1.PlaceOrderResponse>(serviceImpl.PlaceOrder));
     }
 
   }

@@ -31,6 +31,18 @@ public sealed record OrderItem
         Quantity = quantity;
     }
 
+    /// Only for the persistence layer's materialiser, which cannot use the constructor
+    /// above: EF Core will not bind an owned type such as UnitPrice to a constructor
+    /// parameter. It writes the backing fields instead. Nothing else may call this — the
+    /// properties stay get-only, so an instance reached through the model is still frozen.
+    private OrderItem()
+    {
+        ProductId = null!;
+        ProductName = null!;
+        Sku = null!;
+        UnitPrice = null!;
+    }
+
     /// The link back to the catalogue, for support and analytics. Never resolved to read a
     /// name or a price — the snapshot below is the authority.
     public ProductId ProductId { get; }

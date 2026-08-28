@@ -18,7 +18,10 @@ public readonly record struct CustomerId(Guid Value)
 
 /// A string, not a Guid: product ids are assigned by the catalogue, which is a separate
 /// service with its own conventions. This is the one identifier this service does not own.
-public readonly record struct ProductId
+///
+/// A record class for the same reason as Sku: a struct's default value would be a null
+/// string that never passed through the constructor below.
+public sealed record ProductId
 {
     public ProductId(string value)
     {

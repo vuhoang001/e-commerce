@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Turns the rules in .agents/skills/ddd-dotnet and ADR-004 from documentation into a
+       red build. Every project in the repository is referenced here on purpose: these
+       tests need to see the whole dependency graph to prove what is NOT in it. -->
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="TUnit" />
+    <PackageReference Include="NetArchTest.Rules" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../../services/order-service/src/Domain/Ecommerce.OrderService.Domain.csproj" />
+    <ProjectReference Include="../../../services/order-service/src/Application/Ecommerce.OrderService.Application.csproj" />
+    <ProjectReference Include="../../../services/order-service/src/Infrastructure/Ecommerce.OrderService.Infrastructure.csproj" />
+    <ProjectReference Include="../../../services/order-service/src/Api/Ecommerce.OrderService.Api.csproj" />
+    <ProjectReference Include="../../../services/api-gateway/src/Ecommerce.ApiGateway.csproj" />
+  </ItemGroup>
+
+</Project>
