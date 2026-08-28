@@ -4,7 +4,8 @@
 > **Contract-first** communication over gRPC (sync) and Kafka (async).
 >
 > - **Duration:** 6 months
-> - **Dual goal:** a genuinely well-built microservices architecture, and a portfolio for Data Engineer (Streaming) roles
+> - **Dual goal — two career tracks, equal weight:** **Backend / Platform Engineer** and **Data Engineer (Streaming)**.
+>   Every phase is scored against both. See [section 17](#17-dual-track-plan--backend-and-data-engineer).
 > - **Created:** 2026-08-28
 > - **Project language: English.** All docs, code comments, commit messages, and ADRs are written in English.
 
@@ -29,6 +30,7 @@
 14. [Comparison with BookWorm](#14-comparison-with-bookworm)
 15. [Agent skills — pinning AI guidance into the repo](#15-agent-skills--pinning-ai-guidance-into-the-repo)
 16. [Batch pipeline — master data ingestion](#16-batch-pipeline--master-data-ingestion)
+17. [Dual-track plan — backend and data engineer](#17-dual-track-plan--backend-and-data-engineer)
 
 ---
 
@@ -583,6 +585,20 @@ lint:          ## Lint the whole repo
 - [ ] Domain unit tests **with no DB mocking**
 - [ ] Integration tests via **Testcontainers**
 
+#### ★ Backend depth — concurrency and schema change
+
+> Two questions asked in essentially every backend interview, neither of which "having services" answers.
+
+- [ ] **Optimistic concurrency** on the `Order` aggregate — a row version column, and a deliberate
+      `DbUpdateConcurrencyException` path. Two users editing one order must not silently overwrite
+      each other.
+      → be able to explain optimistic vs pessimistic, and why an aggregate suits optimistic
+- [ ] **Expand–contract migration** — practise a zero-downtime column rename:
+      add new column → backfill → write both → switch reads → stop writing old → drop.
+      Do it once deliberately, so *"how do you change a schema without downtime?"* has a real answer.
+- [ ] **Migration ordering rule** — code that tolerates both old and new schema deploys first;
+      the destructive migration ships in a later release, never the same one
+
 #### ★ Architecture tests — start in month 1, not at the end
 
 > This is what turns *"I follow DDD"* into *"violating DDD turns the build red"*. In a polyglot repo it matters even more — the boundaries between four languages are the easiest to break and the hardest to notice.
@@ -616,7 +632,23 @@ lint:          ## Lint the whole repo
 - [ ] DLQ + retry topic with exponential backoff
 - [ ] `building-blocks/chassis-go/` — shared otel middleware and Kafka wrapper
 
-**Done when:** killing order-service mid-publish and restarting loses nothing and duplicates nothing.
+#### ★ Backend depth — resilience and caching
+
+> The chassis lists `Resilience/` and `Caching/` as folders. This is where they stop being folder names.
+
+- [ ] **Resilience on every gateway → service call** (Polly): timeout, retry with **jittered** backoff,
+      circuit breaker. Retry without jitter creates a thundering herd — know why.
+- [ ] **Prove it works** — make `inventory-service` sleep 5 s, watch the breaker open, confirm the
+      gateway degrades instead of hanging
+- [ ] **Cache-aside in `search-service`** — Redis, TTL, and **invalidation driven by a Kafka event**
+      rather than by guesswork
+- [ ] **Cache stampede protection** — single-flight, so one expired key doesn't send 500 concurrent
+      requests to OpenSearch
+- [ ] **Connection pool sizing** — document the pool size per service and why. The classic failure is
+      200 worker threads sharing a pool of 10.
+
+**Done when:** killing order-service mid-publish and restarting loses nothing and duplicates nothing —
+and a slow downstream service trips the breaker instead of taking the gateway down with it.
 
 ---
 
@@ -639,6 +671,23 @@ lint:          ## Lint the whole repo
   - [ ] `GetSimilarProducts` + `GetRecommendationsForUser`
   - [ ] Kafka consumer updating user behaviour features
 - [ ] **E2E test** through the gateway: place an order → assert the final state
+
+#### ★ Backend depth — authentication and authorization
+
+> Until now the plan says "JWT" and stops. That is not an answer to any interview question.
+> This is the single largest backend gap in the original plan.
+
+- [ ] **Identity provider**: Keycloak in `compose.infra.yml` (or Duende IdentityServer if you prefer
+      staying inside .NET)
+- [ ] **Authorization Code flow with PKCE** for the browser → gateway
+- [ ] **Service-to-service auth** — client credentials, or token exchange when a service acts on a
+      user's behalf. Be able to explain the difference and when each applies.
+- [ ] **Policy-based authorization**, not role strings scattered through controllers
+- [ ] **Resource ownership check** — user A must not be able to read user B's order. Write the test
+      that proves it.
+- [ ] **Token propagation through the saga** — when an async handler acts later, whose authority is
+      it acting under? Answer this explicitly; it is a genuinely hard question and a strong one to
+      have thought about.
 
 ---
 
@@ -704,6 +753,18 @@ by 02:30, without any service reading another service's database.
 - [ ] Dashboard splits revenue by **category / brand / supplier** — only possible because of month 4.5
 - [ ] Freshness metric per pipeline: *how old is the newest master data the stream is joining against?*
 
+#### ★ Backend depth — behaviour under load
+
+- [ ] **Rate limiting at the gateway**, per user and per client — and a deliberate decision about what
+      a caller sees when it trips (`429` + `Retry-After`, not a generic `500`)
+- [ ] **Load shedding** — the gateway sheds work and returns `503` before it collapses. Explain the
+      difference between rate limiting (policy) and load shedding (self-preservation).
+- [ ] **Graceful shutdown** — drain in-flight requests, stop consuming Kafka, commit offsets, then exit.
+      A pod killed mid-request must not lose it.
+- [ ] **Health checks that mean something** — liveness ≠ readiness. Readiness fails while a dependency
+      is down; liveness only fails when the process itself is broken. Getting this backwards causes
+      restart loops.
+
 ---
 
 ### Month 6 — Hardening & presentation
@@ -713,6 +774,18 @@ by 02:30, without any service reading another service's database.
 - [ ] **Load testing** — k6 through the gateway, 10k rps, p99 measured per hop
 - [ ] Backfill/replay — reset a consumer group, replay 30 days, reconcile the results
 - [ ] Deploy to **kind** (local K8s) — Helm chart or kustomize
+
+#### ★ Backend depth — releasing safely
+
+- [ ] **Zero-downtime rolling update** — readiness gates, `maxUnavailable`, PodDisruptionBudget
+- [ ] **Blue-green for the gateway** — it is the single front door, so it is the one component where
+      an instant rollback is worth the extra machinery
+- [ ] **Deploy ordering under a contract change** — when `proto/` changes, which side ships first?
+      (Consumer-tolerant first, producer second.) Write this down; it's a common interview question
+      and most candidates have never thought about it.
+- [ ] **Secrets** — not in `.env`, not in git. Even locally, use Docker secrets or SOPS so the habit
+      is right.
+- [ ] **A rollback drill** — deploy a deliberately broken version, roll back, and time it
 - [ ] **12–15 ADRs** in `docs/09-architecture-decisions/`
 - [ ] `docs/runbook.md` — "service X is down, now what"
 - [ ] Complete all 12 arc42 chapters — especially **10-quality-requirements** and **11-risks-and-technical-debt**
@@ -811,6 +884,8 @@ jobs:
 | Service mesh (Istio/Linkerd) | Large complexity, low learning value for the effort |
 | A sophisticated recommendation model | Embeddings + cosine similarity is already impressive enough |
 | Hand-rolled service discovery | Docker DNS / K8s Services suffice |
+| A full notification service (email/SMS templates, provider integration) | No interview asks about SMTP. The WebSocket push the dashboard needs belongs in `api-gateway` (SignalR, ~2 days); the idempotent-side-effect lesson is already 80% covered by the existing consumers. |
+| **`recommendation-service`** — *reconsidered, see [section 17](#17-dual-track-plan--backend-and-data-engineer)* | Weak for both tracks, and month 4.5 already earns Python's place in the repo. Cutting it funds the backend depth blocks. |
 
 ---
 
@@ -846,6 +921,18 @@ jobs:
 | "How do you handle distributed transactions?" | The month 3 saga orchestration |
 | "How do you debug a failure across four services?" | The month 5 distributed tracing |
 | "How do you deploy services independently?" | CI path filters + versioned proto |
+| "How do you change a database schema with no downtime?" | Month 1 — expand–contract, practised once deliberately |
+| "Optimistic or pessimistic locking — which and why?" | Month 1 — row version on the Order aggregate |
+| "A downstream service gets slow. What happens?" | Month 2 — circuit breaker, proven with a 5 s sleep |
+| "Why does retry need jitter?" | Month 2 — thundering herd |
+| "How do you invalidate a cache?" | Month 2 — Kafka-event-driven invalidation, plus stampede protection |
+| "Walk me through your auth flow." | Month 3 — Keycloak, Authorization Code + PKCE |
+| "How do services authenticate to each other?" | Month 3 — client credentials vs token exchange |
+| "An async handler runs later — whose authority is it acting under?" | Month 3 — token propagation through the saga |
+| "Rate limiting vs load shedding?" | Month 5 — both, with different response codes |
+| "Liveness vs readiness probes?" | Month 5 — and what breaks when you swap them |
+| "Proto changed. Which side do you deploy first?" | Month 6 — consumer-tolerant first |
+| "How long does a rollback take?" | Month 6 — measured in a drill, not guessed |
 
 ---
 
@@ -1217,6 +1304,105 @@ Each of these is a real interview question that this phase answers:
 - `docs/09-architecture-decisions/00X-batch-vs-streaming.md` — what goes down which pipeline, and why
 - `docs/09-architecture-decisions/00X-compacted-master-data-topic.md` — the bridge decision above
 - Each DAG carries a docstring naming its source, schedule, and owner
+
+---
+
+## 17. Dual-track plan — backend and data engineer
+
+This project serves **two career tracks with equal weight**. That is a constraint, not a slogan: it
+changes what gets built, what gets cut, and what gets protected when time runs out.
+
+### The imbalance this section fixes
+
+An audit of the plan before this section existed:
+
+| Signal | Data Engineer | Backend / Platform |
+|---|---|---|
+| Interview-map questions | 15 | **6** |
+| Authentication / authorization | n/a | **absent entirely** |
+| Concurrency control, schema migration | n/a | **absent** |
+| Release strategy, rollback | n/a | **absent** |
+| Circuit breaker, caching | n/a | named once as a chassis folder; **no phase built them** |
+
+The diagnosis matters more than the numbers: months 1–3 were building backend **breadth** — more
+services, more endpoints — while never touching backend **depth**. Breadth is not what backend
+interviews probe. Nobody asks *"how many services do you have?"*. They ask what happens when one of
+them gets slow.
+
+Each phase now carries a `★ Backend depth` block for exactly this reason.
+
+### Which phase feeds which track
+
+| Phase | Backend value | Data value |
+|---|---|---|
+| M0.5 — Skeleton | ●●○ contracts, tracing, tooling | ●●○ the pipeline's foundation |
+| M1 — Core domain | ●●● DDD, concurrency, migrations | ○○○ |
+| M2 — Go + events | ●●● resilience, caching, pools | ●●● outbox, CDC, partitioning |
+| M3 — Saga + auth | ●●● distributed transactions, OIDC | ●○○ |
+| M4 — Flink | ○○○ | ●●● windowing, state, exactly-once |
+| M4.5 — Batch | ○○○ | ●●● orchestration, SCD2, batch↔stream |
+| M5 — Serving + load | ●●● rate limiting, shedding, shutdown | ●●● serving layer, freshness |
+| M6 — Release + hardening | ●●● zero-downtime, rollback, chaos | ●●○ backfill, replay |
+
+Roughly **3 months of backend-weighted work and 2.5 months of data-weighted work**, with M2, M5 and
+M6 paying into both. That is the balance to defend.
+
+### One flagship per track — these are never cut
+
+| Track | Flagship | Why this one |
+|---|---|---|
+| **Data Engineer** | Flink exactly-once, proven by killing a TaskManager, plus the batch↔stream enrichment join | The two things every streaming interview converges on: correctness guarantees, and joining a stream to slowly-changing data |
+| **Backend / Platform** | Saga orchestration surviving a service dying mid-flow, with the circuit breaker and rollback drill | Distributed transactions and failure behaviour — the two things backend interviews converge on |
+
+If a month runs long, everything else is negotiable. These two are not.
+
+### Funding the added backend depth
+
+The `★ Backend depth` blocks add roughly **2–3 weeks**. Month 4.5 already consumed the slack, so this
+has to be paid for rather than wished away.
+
+**Recommended cut: `recommendation-service`.**
+
+The reasoning is specific rather than arbitrary:
+
+1. It is the **weakest phase for both tracks**. Embeddings and vector similarity are neither backend
+   engineering nor stream processing — they are a third discipline that neither interview asks about.
+2. Its original justification was *"this is why Python is in the repo"*. **Month 4.5 removed that
+   justification** — the batch pipeline is Python (Airflow, dbt), so Python's place in the polyglot
+   story is already earned, and earned more convincingly.
+3. Cutting it frees **2–3 weeks**, almost exactly the cost of the backend depth blocks.
+
+What you lose: one row in the service table, and the ability to say "I've worked with embeddings".
+What you gain: real auth, real resilience, real release engineering — each of which appears in far
+more job descriptions than pgvector does.
+
+> If you'd rather keep it: cut the `sessionization` Flink job instead (M4 keeps two jobs, which is
+> still enough to demonstrate windowing and state), or accept a seven-month timeline. What you must
+> **not** do is keep everything and let the backend depth blocks quietly not happen — that is how the
+> plan drifts back to being data-only without anyone deciding it should.
+
+### Reading the repo as each audience
+
+The same repository has to answer two different first questions. Both must be answerable within a
+minute of landing on it.
+
+| Reader | First question | Where they should land |
+|---|---|---|
+| Backend hiring manager | "Can this person build a system that survives failure?" | `docs/06-runtime-view.md` (the saga), `docs/failure-modes.md`, the chaos-test results |
+| Data hiring manager | "Does this person understand streaming correctness?" | `docs/08-cross-cutting-concepts/partition-strategy.md`, the Flink job READMEs, the exactly-once proof |
+
+Practical consequence: the README needs **two entry paths**, not one narrative. Add a short
+"Start here" block with two links — one per audience — during month 6 packaging.
+
+### The standing rule
+
+Before adding anything to this plan, answer both halves:
+
+> **Which track does this serve, and does that track need it more than the two-to-three weeks it costs?**
+
+If the answer is "neither strongly" — as it was for a full notification service — it does not go in.
+If it serves only one track, it has to displace something on that same track rather than eating the
+other track's budget.
 
 ---
 
