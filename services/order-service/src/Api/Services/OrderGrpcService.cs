@@ -19,7 +19,10 @@ public sealed class OrderGrpcService : OrderServiceBase
         Status = OrderStatus.Confirmed,
         PlacedAt = Timestamp.FromDateTimeOffset(
             new DateTimeOffset(2026, 8, 28, 9, 30, 0, TimeSpan.Zero)),
-        Total = new Money { CurrencyCode = "USD", Units = 41, Nanos = 970_000_000 },
+        // 18.99 x 2 = 37.98, plus 10% tax of 3.80, is 41.78. The first version of this
+        // seed said 41.97, which matches nothing — see ADR-005. Once the Order aggregate
+        // computes the total this class disappears and the arithmetic cannot drift again.
+        Total = new Money { CurrencyCode = "USD", Units = 41, Nanos = 780_000_000 },
         Items =
         {
             new OrderItem

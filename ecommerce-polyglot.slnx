@@ -13,4 +13,11 @@
   <Folder Name="/services/order-service/src/Api/">
     <Project Path="services/order-service/src/Api/Ecommerce.OrderService.Api.csproj" />
   </Folder>
+  <Folder Name="/services/order-service/src/Domain/">
+    <Project Path="services/order-service/src/Domain/Ecommerce.OrderService.Domain.csproj" />
+  </Folder>
+  <Folder Name="/services/order-service/tests/" />
+  <Folder Name="/services/order-service/tests/Domain.UnitTests/">
+    <Project Path="services/order-service/tests/Domain.UnitTests/Ecommerce.OrderService.Domain.UnitTests.csproj" />
+  </Folder>
 </Solution>

@@ -12,6 +12,7 @@
     <PackageVersion Include="Grpc.AspNetCore" Version="2.76.0" />
     <PackageVersion Include="Grpc.Core.Api" Version="2.76.0" />
     <PackageVersion Include="Grpc.Net.ClientFactory" Version="2.76.0" />
+    <PackageVersion Include="TUnit" Version="1.17.7" />
   </ItemGroup>
 
 </Project>

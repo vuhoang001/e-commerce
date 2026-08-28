@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Domain tests reference the domain and nothing else. No database, no containers, no
+       mocking framework — if a test here needed one, the domain would have a dependency
+       it is not allowed to have. -->
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="TUnit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/Domain/Ecommerce.OrderService.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

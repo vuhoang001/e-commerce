@@ -93,7 +93,7 @@ curl localhost:8080/api/orders/1
   "items": [ { "sku": "KIT-CAF-1L", "productName": "Cafetiere, 1 litre",
                "unitPrice": { "amount": 18.99, "currency": "USD" },
                "taxRatePercent": 10, "quantity": 2 } ],
-  "total": { "amount": 41.97, "currency": "USD" } }
+  "total": { "amount": 41.78, "currency": "USD" } }
 ```
 
 The data is hard-coded — there is no database yet. What this proves is the path: REST

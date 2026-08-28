@@ -32,3 +32,4 @@ What else was on the table, and the specific reason each was rejected.
 | [002](002-contract-layout-and-generation.md) | Contract layout and code generation scope | ✅ Accepted |
 | [003](003-gateway-translates-rest-to-grpc-by-hand.md) | The gateway translates REST to gRPC by hand | ✅ Accepted |
 | [004](004-gateway-folders-by-feature.md) | The gateway groups code by feature, order-service by layer | ✅ Accepted |
+| [005](005-money-representation-and-rounding.md) | Money is a decimal amount plus a currency, rounded away from zero at two places | ✅ Accepted |

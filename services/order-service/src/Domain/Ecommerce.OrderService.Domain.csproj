@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- This project references NOTHING — no packages, no other projects, not
+       building-blocks. That is the rule the ddd-dotnet skill states and that
+       tests/arch/dotnet will enforce: a domain test must never need a container,
+       a database or a framework.
+
+       If you find yourself wanting a PackageReference here, the thing you are
+       modelling probably belongs in Infrastructure behind an interface the domain
+       declares. -->
+
+  <PropertyGroup>
+    <RootNamespace>Ecommerce.OrderService.Domain</RootNamespace>
+  </PropertyGroup>
+
+</Project>

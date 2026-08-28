@@ -5,5 +5,11 @@
   "sdk": {
     "version": "10.0.400",
     "rollForward": "latestFeature"
+  },
+  "//4": "TUnit runs on Microsoft.Testing.Platform, not VSTest. The .NET 10 SDK refuses",
+  "//5": "to run it through the old VSTest bridge, so `dotnet test` has to be told which",
+  "//6": "runner to use. Without this, `make test` fails before a single test executes.",
+  "test": {
+    "runner": "Microsoft.Testing.Platform"
   }
 }
