@@ -567,18 +567,25 @@ lint:          ## Lint the whole repo
 
 > **Goal:** one request travelling browser → gateway → one service → DB, with a visible trace.
 
-- [ ] Repo skeleton per section 2
-- [ ] **`mise.toml`** pinning .NET / Go / Python / Java / buf — *day one, not later*
-- [ ] Scaffold `docs/` on the arc42 skeleton (12 empty files with headings — fill in over time)
-- [ ] **`.agents/skills/` + `CLAUDE.md` + `AGENTS.md`** — see [section 15](#15-agent-skills--pinning-ai-guidance-into-the-repo).
+- [x] Repo skeleton per section 2
+- [x] **`mise.toml`** pinning .NET / Go / Python / Java / buf — *day one, not later*
+      *(plus `global.json`: mise cannot control which .NET SDK `dotnet` selects — see the commit that added it)*
+- [x] Scaffold `docs/` on the arc42 skeleton (12 empty files with headings — fill in over time)
+- [x] **`.agents/skills/` + `CLAUDE.md` + `AGENTS.md`** — see [section 15](#15-agent-skills--pinning-ai-guidance-into-the-repo).
       Write `proto-contract` and `ddd-dotnet` in week one; add the rest as each language appears.
-- [ ] `proto/rpc/order/v1/order_service.proto` — a single `GetOrder` RPC
-- [ ] `make proto` generates stubs for C# and Go
-- [ ] `order-service` (C#) returning hard-coded data
-- [ ] `api-gateway` (C# + YARP) exposing REST `/api/orders/{id}` → gRPC client call to order-service
-- [ ] `compose.infra.yml` + `compose.services.yml` + `Makefile`
+- [x] `proto/rpc/order/v1/order_service.proto` — `GetOrder`, and `PlaceOrder` once the aggregate existed
+- [x] `make proto` generates stubs for **C# only** — Go, Python and Java plugins are present but
+      commented out until their first service. See [ADR-002](docs/09-architecture-decisions/002-contract-layout-and-generation.md).
+- [x] `order-service` (C#) — went past hard-coded data: it now serves the `Order` aggregate from Postgres
+- [x] `api-gateway` (C#) exposing REST `/api/orders/{id}` → gRPC client call to order-service.
+      **YARP is not referenced yet** — nothing needs passing through until catalog-service in month 2.
+      See [ADR-003](docs/09-architecture-decisions/003-gateway-translates-rest-to-grpc-by-hand.md).
+- [x] `Makefile` — plus `make run`, `make call`, `make migration`, `make db-update`, `make build`
+- [x] `compose.infra.yml` — **Postgres only**; Kafka, Redis and OpenSearch arrive with the phase that needs them
+- [ ] `compose.services.yml` — until this exists, `make up` fails and services run with `make run`
 - [ ] OTel Collector + Grafana Tempo — **a visible two-hop trace**
-- [ ] CI: build both services + `buf lint`
+- [x] CI: `.github/workflows/ci.yml` — paths-filter, `buf lint`, `buf breaking` on PRs,
+      **`gen-is-current`** (regenerates and diffs, so a forgotten `make proto` is red), build, test, arch
 
 **Done when:** `make up && curl localhost:8080/api/orders/1` returns a result, and the trace shows both spans.
 
@@ -586,27 +593,33 @@ lint:          ## Lint the whole repo
 
 ### Month 1 — Core domain (C#)
 
-- [ ] **order-service**, complete:
-  - [ ] `Domain/` — `Order` aggregate, `OrderItem`, `Address` value object, domain events
-  - [ ] **`OrderItem` snapshots the item** — `product_id`, `product_name`, `sku`, `unit_price`,
+- [ ] **order-service**, complete:  *(everything but idempotency)*
+  - [x] `Domain/` — `Order` aggregate, `OrderItem`, `Address` value object, domain events.
+        The project references **nothing** — no packages, no projects — and an architecture test proves it.
+  - [x] **`OrderItem` snapshots the item** — `product_id`, `product_name`, `sku`, `unit_price`,
         `currency`, `tax_rate`, `quantity` — see [section 18](#18-order-items-and-master-data--copy-or-look-up).
         Get this shape right now and nothing downstream needs rewriting.
-  - [ ] **Immutability test**: change the seeded product, re-read an existing order, assert nothing
+  - [x] **Immutability test** — by reflection, so adding a setter fails the build: change the seeded product, re-read an existing order, assert nothing
         moved. This is what stops someone normalising it away in month 4.
-  - [ ] `Application/` — MediatR + `Logging → Validation → Transaction` pipeline
-  - [ ] `Infrastructure/` — EF Core, Postgres, migrations
-  - [ ] Idempotency: `IdentifiedCommand` + `RequestManager`
+  - [x] `Application/` — MediatR + `Logging → Validation → Transaction` pipeline.
+        Handlers never call `SaveChanges`; the behaviour commits once, after the handler returns.
+  - [x] `Infrastructure/` — EF Core, Postgres, migrations
+  - [ ] Idempotency: `IdentifiedCommand` + `RequestManager` — **needed before the month 3 saga**,
+        where a retried step must not place a second order
 - [ ] **payment-service** (C#) — minimal, just enough to act as a saga participant
-- [ ] Domain unit tests **with no DB mocking**
-- [ ] Integration tests via **Testcontainers**
+- [x] Domain unit tests **with no DB mocking** — 21 of them, no mocking framework at all
+- [ ] Integration tests via **Testcontainers** — the optimistic-concurrency conflict has been proven
+      by hand but nothing re-runs it; this is what makes it a standing guarantee
 
 #### ★ Backend depth — concurrency and schema change
 
 > Two questions asked in essentially every backend interview, neither of which "having services" answers.
 
-- [ ] **Optimistic concurrency** on the `Order` aggregate — a row version column, and a deliberate
-      `DbUpdateConcurrencyException` path. Two users editing one order must not silently overwrite
-      each other.
+- [x] **Optimistic concurrency** on the `Order` aggregate — **no row version column**: Postgres's
+      `xmin` system column is the token, mapped as a shadow property, so the aggregate never learns
+      it exists. Verified: two contexts read one order, the second write is rejected with
+      `DbUpdateConcurrencyException` and the first writer's state stands.
+      See [ADR-006](docs/09-architecture-decisions/006-optimistic-concurrency-via-xmin.md).
       → be able to explain optimistic vs pessimistic, and why an aggregate suits optimistic
 - [ ] **Expand–contract migration** — practise a zero-downtime column rename:
       add new column → backfill → write both → switch reads → stop writing old → drop.
@@ -625,9 +638,12 @@ lint:          ## Lint the whole repo
 | Python | `import-linter` | `app/models` must not import `app/consumers` |
 | **All languages** | hand-written tests | **No service may import another language's `gen/`**<br>**No service may reference another service's packages** |
 
-- [ ] `tests/arch/dotnet` — at least 8 rules, running in CI
+- [x] `tests/arch/dotnet` — **21 rules**, running in CI. The strongest is assembly-level: Domain may
+      reference nothing but the framework, so no package can sneak in — not only the forbidden ones.
+      `ProjectFileTests` reads the `.csproj` files too, because a compiled assembly lists only what
+      it *uses*: declaring an unused dependency left no trace and passed until that rule was added.
 - [ ] `tests/arch/go` and `tests/arch/python` — added as those services appear (months 2 and 3)
-- [ ] The single most valuable rule: a **cyclic dependency test** — catches a distributed monolith early
+- [x] The single most valuable rule: a **cyclic dependency test** — catches a distributed monolith early
 
 ---
 
@@ -963,8 +979,8 @@ jobs:
 
 | Phase | Key deliverable | Status |
 |---|---|---|
-| M0.5 — Skeleton | `make up` + a two-hop trace | ☐ |
-| M1 — Core domain | Order aggregate + Testcontainers tests | ☐ |
+| M0.5 — Skeleton | `make up` + a two-hop trace | ◐ — contracts, both services, CI and Postgres done; `compose.services.yml` and the OTel trace open |
+| M1 — Core domain | Order aggregate + Testcontainers tests | ◐ — aggregate, pipeline, EF Core, xmin concurrency and 21 arch rules done; Testcontainers, idempotency and payment-service open |
 | M2 — Go + events ★ | Outbox → Kafka, nothing lost or duplicated | ☐ |
 | M3 — Saga + Python | A successful end-to-end order through the gateway | ☐ |
 | M4 — Flink ★ | Three jobs + a proof of exactly-once | ☐ |

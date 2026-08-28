@@ -1,0 +1,110 @@
+# Runs the same `make` targets you run locally. If CI and a developer's machine can
+# disagree about whether something passes, the build is not a gate — it is a suggestion.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # Don't rebuild everything when one service changes — PLAN.md section 9. Only two
+  # filters today because only C# exists; catalog (Go), recommendation (Python) and
+  # stream-processor (Java) get their own as they arrive, each with its own gen/ path.
+  changes:
+    name: What changed
+    runs-on: ubuntu-latest
+    outputs:
+      proto: ${{ steps.filter.outputs.proto }}
+      dotnet: ${{ steps.filter.outputs.dotnet }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            proto:
+              - 'proto/**'
+              - 'building-blocks/gen/**'
+              - '.github/workflows/**'
+            dotnet:
+              - 'services/**'
+              - 'building-blocks/**'
+              - 'tests/**'
+              - 'Directory.Build.props'
+              - 'Directory.Packages.props'
+              - 'global.json'
+              - 'ecommerce-polyglot.slnx'
+              - '.editorconfig'
+              - '.github/workflows/**'
+
+  contract:
+    name: Contract
+    needs: changes
+    if: needs.changes.outputs.proto == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # buf breaking compares against main, so it needs main's history.
+          fetch-depth: 0
+
+      # buf's version comes from mise.toml, the same file that pins it locally.
+      - uses: jdx/mise-action@v2
+
+      - name: Lint
+        run: make lint
+
+      - name: Detect breaking contract changes
+        # Only meaningful on a pull request: on main there is nothing to compare against
+        # but itself.
+        if: github.event_name == 'pull_request'
+        run: make proto-check
+
+      - name: Generated code is current
+        # The job PLAN.md section 9 calls unskippable, and the one nothing else catches:
+        # editing a .proto and forgetting `make proto`. That mistake compiles fine and
+        # surfaces later as a runtime mismatch between two services.
+        run: |
+          make proto
+          if [ -n "$(git status --porcelain building-blocks/gen)" ]; then
+            echo "::error::building-blocks/gen is out of date. Run 'make proto' and commit the result."
+            git status --porcelain building-blocks/gen
+            git --no-pager diff -- building-blocks/gen
+            exit 1
+          fi
+          echo "Generated code matches proto/."
+
+  dotnet:
+    name: .NET
+    needs: changes
+    if: needs.changes.outputs.dotnet == 'true' || needs.changes.outputs.proto == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # From global.json, not mise: every SDK on a machine lives in one directory and
+      # `dotnet` picks the highest unless global.json says otherwise. mise.toml pins the
+      # tools it can actually control.
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Build
+        run: make build
+
+      - name: Test
+        run: make test
+
+      - name: Architecture rules
+        # Kept a separate step from `make test` on purpose. A boundary violation and a
+        # failing unit test are different kinds of problem, and the log should say which.
+        run: make arch

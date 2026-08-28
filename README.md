@@ -65,8 +65,8 @@ tests rather than left to discipline.
 
 | Phase | Focus | Status |
 |---|---|---|
-| 0.5 | Skeleton — one request travelling the full path | ☐ |
-| 1 | Core order logic | ☐ |
+| 0.5 | Skeleton — one request travelling the full path | ◐ |
+| 1 | Core order logic | ◐ |
 | 2 | Go services + the event backbone | ☐ |
 | 3 | Multi-step order flow + recommendations | ☐ |
 | 4 | Stream processing | ☐ |
