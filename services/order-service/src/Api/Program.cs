@@ -14,3 +14,8 @@ var app = builder.Build();
 app.MapGrpcService<OrderGrpcService>();
 
 app.Run();
+
+/// Top-level statements compile into an internal Program class, which
+/// WebApplicationFactory cannot reach. Making it public is the documented way to let the
+/// integration tests boot this exact host rather than a reconstruction of it.
+public partial class Program;

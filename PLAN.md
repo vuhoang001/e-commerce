@@ -608,8 +608,11 @@ lint:          ## Lint the whole repo
         where a retried step must not place a second order
 - [ ] **payment-service** (C#) — minimal, just enough to act as a saga participant
 - [x] Domain unit tests **with no DB mocking** — 21 of them, no mocking framework at all
-- [ ] Integration tests via **Testcontainers** — the optimistic-concurrency conflict has been proven
-      by hand but nothing re-runs it; this is what makes it a standing guarantee
+- [x] Integration tests via **Testcontainers** — 12 of them, running the real gRPC host against a
+      throwaway Postgres: the round trip through EF Core's mapping, the status codes the interceptor
+      produces, that migrations leave nothing pending, that `xmin` is absent as a user column and
+      readable as a system one, and the concurrency conflict in all three directions —
+      loser rejected, winner's state stands, uncontested write still succeeds
 
 #### ★ Backend depth — concurrency and schema change
 
@@ -980,7 +983,7 @@ jobs:
 | Phase | Key deliverable | Status |
 |---|---|---|
 | M0.5 — Skeleton | `make up` + a two-hop trace | ◐ — contracts, both services, CI and Postgres done; `compose.services.yml` and the OTel trace open |
-| M1 — Core domain | Order aggregate + Testcontainers tests | ◐ — aggregate, pipeline, EF Core, xmin concurrency and 21 arch rules done; Testcontainers, idempotency and payment-service open |
+| M1 — Core domain | Order aggregate + Testcontainers tests | ◐ — aggregate, pipeline, EF Core, xmin concurrency, 21 arch rules and Testcontainers done; idempotency and payment-service open |
 | M2 — Go + events ★ | Outbox → Kafka, nothing lost or duplicated | ☐ |
 | M3 — Saga + Python | A successful end-to-end order through the gateway | ☐ |
 | M4 — Flink ★ | Three jobs + a proof of exactly-once | ☐ |

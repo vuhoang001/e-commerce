@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Runs the real service against a real Postgres in a throwaway container.
+       Everything below the gRPC surface is genuine: the interceptor, the MediatR
+       pipeline, the aggregate, EF Core's mapping and the migrations. Nothing is
+       substituted, because the things most likely to break here — value converters,
+       an owned collection, a shadow property on a system column, a hand-edited
+       migration — all compile perfectly and fail at runtime. -->
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="TUnit" />
+    <PackageReference Include="Testcontainers.PostgreSql" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+    <PackageReference Include="Grpc.Net.Client" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/Api/Ecommerce.OrderService.Api.csproj" />
+  </ItemGroup>
+
+</Project>

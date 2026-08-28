@@ -23,6 +23,9 @@
     <Project Path="services/order-service/src/Infrastructure/Ecommerce.OrderService.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/services/order-service/tests/" />
+  <Folder Name="/services/order-service/tests/Api.IntegrationTests/">
+    <Project Path="services/order-service/tests/Api.IntegrationTests/Ecommerce.OrderService.Api.IntegrationTests.csproj" />
+  </Folder>
   <Folder Name="/services/order-service/tests/Domain.UnitTests/">
     <Project Path="services/order-service/tests/Domain.UnitTests/Ecommerce.OrderService.Domain.UnitTests.csproj" />
   </Folder>

@@ -19,6 +19,13 @@
     <PackageVersion Include="Grpc.Net.ClientFactory" Version="2.76.0" />
     <PackageVersion Include="TUnit" Version="1.17.7" />
     <PackageVersion Include="NetArchTest.Rules" Version="1.3.2" />
+    <PackageVersion Include="Testcontainers.PostgreSql" Version="4.6.0" />
+    <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.5" />
+    <PackageVersion Include="Grpc.Net.Client" Version="2.76.0" />
+    <!-- Pinned to override the 2024.2.0 that Testcontainers drags in through its SSH
+         transport, which carries a high-severity advisory. Transitive pinning is what
+         makes this one line enough. -->
+    <PackageVersion Include="SSH.NET" Version="2026.0.0" />
     <!-- MediatR 12 is Apache-2.0. Version 13 moved to a commercial licence; nothing here
          needs what it added, so the last freely licensed line is the one to sit on. -->
     <PackageVersion Include="MediatR" Version="12.2.0" />

@@ -12,7 +12,7 @@ PORT ?= 5001
 # itself. The Go services in month 2 use cmd/server and will need their own recipe.
 PROJECT_order-service := services/order-service/src/Api
 PROJECT_api-gateway   := services/api-gateway/src
-.PHONY: help setup up infra run call down clean ps logs proto proto-check migration db-update build test arch lint
+.PHONY: help setup up infra run call down clean ps logs proto proto-check migration db-update build test integration arch lint
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -75,8 +75,11 @@ db-update: ## Apply pending migrations to the running database
 build: ## Build every .NET project
 	dotnet build --configuration Release
 
-test: ## Run tests
-	dotnet test
+test: ## Unit tests — fast, no Docker, no database
+	dotnet test services/order-service/tests/Domain.UnitTests
+
+integration: ## Integration tests — starts Postgres in a container (needs Docker)
+	dotnet test services/order-service/tests/Api.IntegrationTests
 
 arch: ## Architecture tests — enforce service and layer boundaries
 	dotnet test tests/arch/dotnet

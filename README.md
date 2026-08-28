@@ -113,7 +113,8 @@ curl localhost:8080/api/orders/<id>
 
 The total is computed by the `Order` aggregate from its lines, not stored, so it cannot
 disagree with the items. `make call` talks to a gRPC service directly, bypassing the
-gateway; `make test` runs the domain tests and `make arch` the boundary rules.
+gateway. `make test` runs the domain tests (fast, no Docker), `make integration` runs the
+real service against a throwaway Postgres, and `make arch` checks the boundary rules.
 
 ## Project conventions
 

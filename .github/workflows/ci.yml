@@ -107,8 +107,14 @@ jobs:
       - name: Build
         run: make build
 
-      - name: Test
+      - name: Unit tests
         run: make test
+
+      - name: Integration tests
+        # Testcontainers starts a real Postgres. GitHub-hosted runners ship with Docker, so
+        # this needs no service container and no connection string in the workflow — the
+        # test owns its database and throws it away.
+        run: make integration
 
       - name: Architecture rules
         # Kept a separate step from `make test` on purpose. A boundary violation and a
