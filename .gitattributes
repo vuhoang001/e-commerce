@@ -1,0 +1,8 @@
+* text=auto eol=lf
+
+# Generated from proto/ — never hand-edited, excluded from diffs and language stats
+building-blocks/gen/** linguist-generated=true
+building-blocks/gen/** -diff
+
+*.png binary
+*.svg binary

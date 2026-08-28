@@ -2,25 +2,36 @@
 bin/
 obj/
 *.user
+*.suo
 
 # Go
 vendor/
 
 # Python
 __pycache__/
+*.py[cod]
 .venv/
 *.egg-info/
+.pytest_cache/
+.ruff_cache/
 
 # Java
 target/
+.mvn/wrapper/maven-wrapper.jar
 
-# Generated from proto — regenerate with `make proto`
-# (tracked on purpose; see PLAN.md §4)
+# Node (dashboard, if any)
+node_modules/
+
+# Generated from proto/ is COMMITTED on purpose — see PLAN.md section 4.
+# A fresh clone must build without installing buf. Do not ignore building-blocks/gen/.
+
+# Local environment
+.env
+*.local
 
 # Tooling
 .idea/
 .vs/
 .vscode/
 *.log
-.env
 .DS_Store
