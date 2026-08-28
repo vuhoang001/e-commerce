@@ -4,7 +4,8 @@ An online shop, built as a set of small independent services rather than one lar
 Every order placed, item searched, and stock level changed becomes an event the rest of the
 system reacts to — including a pipeline that turns those events into live numbers as they happen.
 
-> **Status:** planning. The architecture is being designed before any code is written, deliberately.
+> **Status:** month 0.5 — the walking skeleton. Two of the seven services exist and a request
+> travels the full path; the rest is still on paper. See [Running it](#running-it).
 
 ## What it will do
 
@@ -71,6 +72,34 @@ tests rather than left to discipline.
 | 4 | Stream processing | ☐ |
 | 5 | Live dashboard + end-to-end tracing | ☐ |
 | 6 | Failure testing, deployment, documentation | ☐ |
+
+## Running it
+
+`make up` is the intended entry point, but it needs the compose files, which are not
+written yet. Until then, two terminals:
+
+```sh
+make setup                 # once, after cloning — pins every tool version
+make run S=order-service   # terminal 1 — gRPC on :5001
+make run S=api-gateway     # terminal 2 — REST on :8080
+```
+
+```sh
+curl localhost:8080/api/orders/1
+```
+
+```json
+{ "orderId": "1", "status": "confirmed",
+  "items": [ { "sku": "KIT-CAF-1L", "productName": "Cafetiere, 1 litre",
+               "unitPrice": { "amount": 18.99, "currency": "USD" },
+               "taxRatePercent": 10, "quantity": 2 } ],
+  "total": { "amount": 41.97, "currency": "USD" } }
+```
+
+The data is hard-coded — there is no database yet. What this proves is the path: REST
+reaches the gateway, the gateway calls order-service over gRPC using stubs generated from
+`proto/`, and the answer comes back translated. `make call` sends a request straight to a
+gRPC service, bypassing the gateway.
 
 ## Project conventions
 

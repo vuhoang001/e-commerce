@@ -11,6 +11,7 @@
     <PackageVersion Include="Google.Protobuf" Version="3.34.1" />
     <PackageVersion Include="Grpc.AspNetCore" Version="2.76.0" />
     <PackageVersion Include="Grpc.Core.Api" Version="2.76.0" />
+    <PackageVersion Include="Grpc.Net.ClientFactory" Version="2.76.0" />
   </ItemGroup>
 
 </Project>
