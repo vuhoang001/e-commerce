@@ -28,6 +28,7 @@
 13. [Progress tracker](#13-progress-tracker)
 14. [Comparison with BookWorm](#14-comparison-with-bookworm)
 15. [Agent skills — pinning AI guidance into the repo](#15-agent-skills--pinning-ai-guidance-into-the-repo)
+16. [Batch pipeline — master data ingestion](#16-batch-pipeline--master-data-ingestion)
 
 ---
 
@@ -186,6 +187,22 @@ ecommerce-polyglot/
 │       ├── gen-proto.sh
 │       ├── init-databases.sh
 │       └── seed-data.py
+│
+├── data-platform/                  # ★ the BATCH pipeline — see section 16
+│   ├── orchestration/
+│   │   ├── dags/                   #   Airflow DAGs
+│   │   └── plugins/
+│   ├── ingestion/                  #   one extractor per source system
+│   │   ├── supplier_catalogue/     #     daily snapshot (object storage)
+│   │   ├── partner_pricing/        #     incremental REST pull
+│   │   └── reference_data/         #     small static reloads
+│   ├── transformations/            #   dbt: bronze → silver → gold
+│   │   ├── models/bronze/
+│   │   ├── models/silver/          #     cleaned, typed, SCD Type 2
+│   │   └── models/gold/            #     serving shapes
+│   ├── quality/                    #   data quality suites — the gate before gold
+│   ├── publishers/                 #   gold → log-compacted Kafka topics
+│   └── tests/
 │
 ├── deploy/
 │   ├── k8s/
@@ -650,6 +667,32 @@ You must be able to do **and explain**:
 
 ---
 
+### Month 4.5 — Batch pipeline & master data ★ *(2–3 weeks)*
+
+> Full design in [section 16](#16-batch-pipeline--master-data-ingestion). This is the phase that turns a
+> streaming project into a **data platform** — and it is what most Data Engineer job descriptions
+> actually ask for, since almost none of them are streaming-only.
+
+- [ ] **Airflow** in `compose.infra.yml`, DAGs in `data-platform/orchestration/dags/`
+- [ ] **Source 1 — supplier catalogue**: daily full snapshot (Parquet on MinIO, standing in for an SFTP drop)
+- [ ] **Source 2 — partner pricing**: paginated REST pull, incremental by high-water mark on `updated_at`
+- [ ] **Bronze → silver → gold** in dbt; **SCD Type 2** for products in silver
+- [ ] **Data quality gate** between silver and gold — a bad batch must never reach gold
+- [ ] **Publisher**: gold → **log-compacted Kafka topic** `catalog.product.master.v1`
+- [ ] **catalog/search services consume it** — the batch pipeline never writes to a service database
+- [ ] ★ **Enrichment join in Flink** — `revenue-rollup` gains revenue by category, brand and supplier
+- [ ] **Backfill test** — replay 90 days through the same DAG; totals must be identical, not doubled
+- [ ] **Failure test** — kill a task mid-run, re-run the same logical date, verify no duplicates
+
+**Done when:** a product renamed in the supplier feed at 02:00 appears in the Flink revenue breakdown
+by 02:30, without any service reading another service's database.
+
+> ⏱ **Timeline honesty:** this adds 2–3 weeks to a plan with little slack. Month 6 packaging is what
+> will compress. If something has to give, drop the `sessionization` Flink job or the Iceberg cold
+> layer — **not** this phase and not the packaging.
+
+---
+
 ### Month 5 — Serving layer & completion
 
 - [ ] **ClickHouse** — written to by Flink, serving the dashboard
@@ -658,6 +701,8 @@ You must be able to do **and explain**:
 - [ ] **Complete end-to-end trace**: browser → C# → Go → Kafka → Java → ClickHouse
 - [ ] Metrics: consumer lag, checkpoint duration, backpressure, per-service gRPC p99
 - [ ] Data quality: null checks, schema drift, late-arrival rate
+- [ ] Dashboard splits revenue by **category / brand / supplier** — only possible because of month 4.5
+- [ ] Freshness metric per pipeline: *how old is the newest master data the stream is joining against?*
 
 ---
 
@@ -783,6 +828,12 @@ jobs:
 | "How is CDC different from outbox polling?" | Month 2 — both were built and measured |
 | "What is backpressure and how do you detect it?" | Flink UI + the metrics already wired up |
 | "Stateful vs stateless processing?" | Jobs 2 and 3 |
+| "How do you join a stream against slowly-changing data?" | Month 4.5 — the enrichment join, section 16 |
+| "Full load or incremental — how do you choose?" | Month 4.5 — two sources, one of each |
+| "What is log compaction and when do you use it?" | Section 16 — master data topics |
+| "How do you model dimension history?" | SCD Type 2 in the silver layer |
+| "A nightly job fails at 3am — what happens?" | Idempotent tasks + high-water marks, section 16 |
+| "How do you backfill 90 days without double counting?" | Month 4.5 — same DAG, date range, idempotent by design |
 | "What if a saga gets stuck?" | Month 3 — orchestration + stuck-saga detection |
 
 ### Backend / Platform
@@ -807,6 +858,7 @@ jobs:
 | M2 — Go + events ★ | Outbox → Kafka, nothing lost or duplicated | ☐ |
 | M3 — Saga + Python | A successful end-to-end order through the gateway | ☐ |
 | M4 — Flink ★ | Three jobs + a proof of exactly-once | ☐ |
+| M4.5 — Batch pipeline ★ | Master data reaching Flink via a compacted topic | ☐ |
 | M5 — Serving | An unbroken trace across four languages | ☐ |
 | M6 — Hardening | `failure-modes.md` + 15 ADRs | ☐ |
 | M6 — Packaging | Docs site + screenshots + badges + diagram | ☐ |
@@ -991,6 +1043,180 @@ Add a one-line `AGENTS.md` pointing at `CLAUDE.md` so any agent can find it.
 | A skill says one thing while `tests/arch/` enforces another | When a rule changes, **change both in the same PR**. Put it in the PR template checklist. |
 | Skills written once and never read | Re-read that month's skills at the end of each month — fifteen minutes |
 | Vendored skills drifting from upstream | Record source and version in `metadata`; re-check in month 6 |
+
+---
+
+## 16. Batch pipeline — master data ingestion
+
+> **Assumption stated up front:** "master data from a software source" is read here as reference data
+> arriving from **external systems we do not control** — a supplier's product feed, a partner's price
+> list, tax and geography tables. If the real source is something else (an ERP database, an internal
+> legacy system), the shape of the pipeline is unchanged; only the extractor in
+> `data-platform/ingestion/` differs.
+
+### Why a second pipeline rather than forcing it through the first
+
+Streaming carries **facts that happened**: an order was placed, stock moved, someone clicked.
+Master data is a different kind of thing entirely: it **describes** the world rather than recording
+changes to it. Products, categories, brands, suppliers, price lists, tax rates.
+
+Pushing it down the streaming path is a common and expensive mistake. You would be replaying a
+200,000-row supplier catalogue through Kafka every night as though each row were a business event,
+paying event-time and watermark costs for data that has no event time.
+
+| | Streaming pipeline | Batch pipeline |
+|---|---|---|
+| Carries | Facts that happened | Reference data that describes things |
+| Trigger | Continuous | Scheduled (nightly, hourly) |
+| Source | Our own services | External systems we don't control |
+| Volume shape | Many small messages | Few large files |
+| Typical failure | Consumer lag climbing | A run that failed and must be re-run |
+| Correctness comes from | Exactly-once via checkpoints | Idempotent, re-runnable tasks |
+| Tooling | Flink | Airflow + Python + dbt |
+| Recovery | Replay from offset | Re-run the same logical date |
+
+Building both — and being able to say clearly when each applies — is worth more in an interview
+than doing either one alone. Very few Data Engineer roles are streaming-only.
+
+### Sources — simulated, but realistically shaped
+
+Two sources, deliberately chosen so the pipeline has to handle both loading patterns:
+
+| Source | Shape | Pattern | Teaches |
+|---|---|---|---|
+| `supplier_catalogue` | Daily Parquet/CSV snapshot dropped in object storage (MinIO standing in for SFTP) | **Full snapshot** | Detecting change by comparison; SCD Type 2; handling deletes |
+| `partner_pricing` | Paginated REST API with `updated_since` | **Incremental** | High-water marks, pagination, retries, rate limiting |
+| `reference_data` | Small static CSVs (tax rates, regions) | Full reload | Nothing interesting — deliberately trivial, kept for realism |
+
+A full snapshot and an incremental pull have genuinely different failure modes, and being able to
+explain when to choose each is a standard interview question.
+
+### Where the data goes — the rule that matters most
+
+> **The batch pipeline never writes into a service's database.**
+
+That rule is not bureaucracy. Break it and `catalog-service` no longer owns its own data, its
+architecture tests become a lie, and you have built the distributed monolith that section 10 warns
+about.
+
+```
+  External source
+        │
+        ▼
+  ┌───────────┐   raw, immutable, partitioned by ingest date — never rewritten
+  │  BRONZE   │
+  └─────┬─────┘
+        ▼
+  ┌───────────┐   cleaned, typed, deduplicated, SCD Type 2 history
+  │  SILVER   │
+  └─────┬─────┘
+        │  ◀── DATA QUALITY GATE: a bad batch stops here
+        ▼
+  ┌───────────┐   serving shapes, one row per product, current state
+  │   GOLD    │
+  └─────┬─────┘
+        ▼
+  ╔═══════════════════════════════════════════════════╗
+  ║  KAFKA — log-compacted topic                      ║
+  ║  catalog.product.master.v1   (key = product_id)   ║
+  ╚═══════╤═══════════════════════════════╤═══════════╝
+          │                               │
+          ▼                               ▼
+  catalog-service                  stream-processor
+  search-service                   (broadcast state for
+  (each owns its own copy)          enrichment joins)
+```
+
+### Why a log-compacted topic is the bridge
+
+This is the single most important design choice in this section, and worth an ADR.
+
+A compacted topic keeps **the latest value for each key, forever**. That gives three properties at once:
+
+1. **Service ownership survives.** `catalog-service` consumes the topic and decides for itself what to
+   store. Nobody reaches into its database.
+2. **New consumers bootstrap themselves.** A service added in month 6 reads the topic from the
+   beginning and arrives at complete current state — no special backfill path to build.
+3. **The two pipelines meet here.** Flink builds broadcast state directly from the same topic. Batch
+   output and stream processing connect through one well-defined interface instead of a side channel.
+
+Contrast this with the event topics: `ordering.order.v1` is retention-based, because replaying every
+order that ever happened is meaningful. Replaying every historical *version* of a product name is not
+— you want the current one. **Different data, different retention policy.** Say exactly this when asked.
+
+### The payoff — the enrichment join
+
+This is why the phase earns its place, rather than being ingestion for its own sake.
+
+Today `revenue-rollup` aggregates order events that carry only product IDs. It can report total
+revenue per minute. It cannot report **revenue by category, by brand, or by supplier** — the stream
+does not know what a product *is*.
+
+Joining the order stream against master data fixes that, and it is one of the most frequently asked
+streaming interview questions.
+
+| Flink approach | When it fits | Note |
+|---|---|---|
+| **Broadcast state** ★ | Reference data small enough to hold in every task's memory | Recommended here — a product catalogue is tens of thousands of rows |
+| Lookup join | Reference data too large to broadcast | Adds an external call per record; needs caching |
+| Temporal table join | You need the value **as it was** at event time | The correct choice if you must reprice historical orders accurately |
+
+Choose broadcast state, and write down why in the ADR — including the condition under which you would
+switch (catalogue growing past what fits comfortably in task memory).
+
+### Repository placement
+
+```
+data-platform/
+├── orchestration/dags/     # Airflow DAGs
+├── ingestion/              # one extractor per source system
+├── transformations/        # dbt models: bronze → silver → gold
+├── quality/                # data quality suites
+├── publishers/             # gold → compacted Kafka topics
+└── tests/
+```
+
+**Why this sits outside `services/`:** everything under `services/` runs continuously — it serves
+requests or consumes a stream, and it is always up. The batch pipeline is **scheduled work**. Different
+lifecycle, different deployment model, different failure mode, different on-call story. Putting it
+under `services/` would blur a distinction that is real.
+
+`stream-processor` stays where it is, under `services/`, because a Flink job genuinely does run
+continuously.
+
+**Language: Python.** No new toolchain — `recommendation-service` already establishes Python in this
+repo, and Airflow and dbt are both Python-native.
+
+### Design rules
+
+| # | Rule | Why |
+|---|---|---|
+| 1 | **Every task is idempotent** — re-running the same logical date produces the same result | This is what makes a 3am failure survivable. It is the batch equivalent of exactly-once. |
+| 2 | **Bronze is immutable** — never updated, never rewritten, only appended by ingest date | When a downstream bug is found six weeks later, you can reprocess from original truth |
+| 3 | **High-water marks live in the orchestrator**, not inside the job | A job that remembers its own position cannot be safely re-run or backfilled |
+| 4 | **SCD Type 2 in silver** — every product row carries `valid_from` / `valid_to` | Enables "what was this product called when that order was placed" |
+| 5 | **The quality gate is between silver and gold** | Bad data must never reach gold, because gold reaches Kafka, and Kafka reaches everything |
+| 6 | **Backfill is the same DAG with a date range** — never a separate script | A separate backfill script drifts from the real pipeline and lies to you when you need it most |
+| 7 | **Publishing is a separate task from transforming** | So you can rebuild gold without re-emitting to Kafka, and re-emit without rebuilding |
+
+### What you must be able to explain
+
+Each of these is a real interview question that this phase answers:
+
+- Full load versus incremental — how you choose, and what breaks with each
+- SCD Type 2 versus Type 1, and when the history is genuinely needed
+- Log compaction versus time-based retention, with a concrete example of each in this repo
+- How to join a stream against slowly-changing dimension data, and the three Flink options
+- What happens when a nightly run fails at 3am, and what makes recovery safe
+- How to backfill 90 days without double-counting
+- Where batch and streaming meet in this architecture, and why they meet *there*
+
+### Documentation this phase produces
+
+- `docs/08-cross-cutting-concepts/data-lineage.md` — source → bronze → silver → gold → topic → consumer
+- `docs/09-architecture-decisions/00X-batch-vs-streaming.md` — what goes down which pipeline, and why
+- `docs/09-architecture-decisions/00X-compacted-master-data-topic.md` — the bridge decision above
+- Each DAG carries a docstring naming its source, schedule, and owner
 
 ---
 
