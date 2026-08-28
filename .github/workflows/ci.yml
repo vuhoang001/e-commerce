@@ -25,9 +25,9 @@ jobs:
       proto: ${{ steps.filter.outputs.proto }}
       dotnet: ${{ steps.filter.outputs.dotnet }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: dorny/paths-filter@v3
+      - uses: dorny/paths-filter@v4
         id: filter
         with:
           filters: |
@@ -52,13 +52,13 @@ jobs:
     if: needs.changes.outputs.proto == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           # buf breaking compares against main, so it needs main's history.
           fetch-depth: 0
 
       # buf's version comes from mise.toml, the same file that pins it locally.
-      - uses: jdx/mise-action@v2
+      - uses: jdx/mise-action@v4
 
       - name: Lint
         run: make lint
@@ -89,12 +89,12 @@ jobs:
     if: needs.changes.outputs.dotnet == 'true' || needs.changes.outputs.proto == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # From global.json, not mise: every SDK on a machine lives in one directory and
       # `dotnet` picks the highest unless global.json says otherwise. mise.toml pins the
       # tools it can actually control.
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6
         with:
           global-json-file: global.json
 
