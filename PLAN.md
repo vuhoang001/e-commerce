@@ -27,6 +27,7 @@
 12. [Bản đồ phỏng vấn](#12-bản-đồ-phỏng-vấn)
 13. [Theo dõi tiến độ](#13-theo-dõi-tiến-độ)
 14. [Đối chiếu với BookWorm](#14-đối-chiếu-với-bookworm)
+15. [Agent skills — ghim hướng dẫn AI vào repo](#15-agent-skills--ghim-hướng-dẫn-ai-vào-repo)
 
 ---
 
@@ -65,6 +66,17 @@ Bạn có **3 service và một web client**. Client sẽ gọi thẳng 3 servic
 
 ```
 ecommerce-polyglot/
+├── .agents/
+│   └── skills/                     # ★ hướng dẫn cho AI coding agent — xem mục 15
+│       ├── kafka-conventions/      #   tự viết
+│       ├── proto-contract/         #   tự viết
+│       ├── flink-job/              #   tự viết
+│       ├── go-service/             #   tự viết
+│       ├── ddd-dotnet/             #   tự viết
+│       ├── aspire/                 #   vendor từ Microsoft
+│       └── csharp-tunit/           #   vendor
+├── AGENTS.md                       # trỏ mọi agent về CLAUDE.md
+├── CLAUDE.md                       # quy tắc chung: build/test/lint bằng lệnh nào
 ├── mise.toml                       # ★ PIN phiên bản .NET / Go / Python / Java / buf
 ├── Makefile                        # điểm vào duy nhất: make up / make proto / make test
 ├── compose.infra.yml               # Kafka, Postgres, Redis, OpenSearch, MinIO, OTel
@@ -528,6 +540,8 @@ lint:          ## Lint toàn repo
 - [ ] Khung repo theo cấu trúc mục 2
 - [ ] **`mise.toml`** pin .NET / Go / Python / Java / buf — *làm ngay ngày đầu, không để sau*
 - [ ] Khởi tạo `docs/` theo khung arc42 (12 file rỗng có tiêu đề — điền dần)
+- [ ] **`.agents/skills/` + `CLAUDE.md` + `AGENTS.md`** — xem [mục 15](#15-agent-skills--ghim-hướng-dẫn-ai-vào-repo).
+      Viết `proto-contract` và `ddd-dotnet` ngay tuần đầu; các skill còn lại thêm khi ngôn ngữ tương ứng xuất hiện.
 - [ ] `proto/rpc/order/v1/order_service.proto` — 1 RPC duy nhất `GetOrder`
 - [ ] `make proto` sinh stub cho C# + Go
 - [ ] `order-service` (C#) trả về dữ liệu hard-code
@@ -822,6 +836,7 @@ jobs:
 | **Contract test nằm trong từng service** | Mục 2 — không để ở `tests/contract/` ngoài |
 | **Đóng gói**: docs site, screenshot, badge, sơ đồ ảnh | Tháng 6 |
 | CI bảo mật: CodeQL, Trivy, Dependabot | Tháng 6 |
+| **Agent skills ghim trong repo** (`.agents/skills/`) | Mục 15 + tháng 0.5 |
 
 ### Tránh gì — và vì sao
 
@@ -848,6 +863,130 @@ Toàn bộ **tháng 2 và tháng 4** của kế hoạch này là vùng trắng t
 
 ---
 
+## 15. Agent skills — ghim hướng dẫn AI vào repo
+
+> **Vì sao mục này quan trọng với bạn hơn với BookWorm:** repo của anh ấy ~99% C#, một bộ convention. Repo của bạn có **4 ngôn ngữ, 4 bộ convention**. Không ghim hướng dẫn vào repo, AI sẽ viết Go theo kiểu C#, viết Flink job theo tư duy batch, và đặt tên Kafka topic tuỳ hứng mỗi lần.
+
+### Agent skill là gì
+
+Một thư mục chứa `SKILL.md` — YAML frontmatter + hướng dẫn — mà AI coding agent (Claude Code, Copilot, Cursor) tự nạp khi gặp task liên quan. Đây **không phải code chạy**, và không liên quan gì đến tính năng AI trong sản phẩm (mà ta đã loại khỏi phạm vi ở mục 11).
+
+```
+.agents/skills/kafka-conventions/
+├── SKILL.md              # ngắn — nạp khi trigger
+└── references/           # dài — chỉ nạp khi thật sự cần
+    ├── topic-naming.md
+    └── partition-keys.md
+```
+
+**Hai kỹ thuật quyết định skill có dùng được hay không:**
+
+| Kỹ thuật | Vì sao cần |
+|---|---|
+| `USE FOR` / `DO NOT USE FOR` trong `description` | Agent đọc description để **chọn** skill. Có 7 skill mà không ghi rõ khi nào *không* dùng → agent chọn nhầm liên tục. |
+| **Progressive disclosure** — `SKILL.md` ngắn, `references/` tải theo nhu cầu | Nhồi hết vào `SKILL.md` thì tốn context mỗi lần trigger, kể cả khi chỉ cần 1/10 nội dung. |
+
+### Skill cần **tự viết** — xếp theo thứ tự làm
+
+| # | Skill | Viết khi | Nội dung bắt buộc |
+|---|---|---|---|
+| 1 | **`proto-contract`** | Tuần 1 | Quy trình sửa `.proto`: `buf lint` → `buf breaking` → `make proto` → commit `gen/`. **Cấm sửa tay file trong `gen/`.** Version trong path (`v1/`). `rpc/` đặt tên động từ, `events/` đặt tên quá khứ. |
+| 2 | **`ddd-dotnet`** | Tuần 1 | `Domain/` không tham chiếu `Infrastructure/` hay `building-blocks/`. Aggregate kế thừa `Entity`. Domain event là `record` immutable. Command handler nằm ở `Application/`. Đối chiếu với `tests/arch/` — skill và arch test phải nói **cùng một luật**. |
+| 3 | **`kafka-conventions`** | Tháng 2 | Đặt tên topic, chọn partition key, bắt buộc DLQ + retry topic, inject trace context vào header, commit offset **sau** khi xử lý, consumer phải idempotent. |
+| 4 | **`go-service`** | Tháng 2 | `cmd/server/main.go`, không `main.go` ở gốc. `internal/handler` không import thẳng `internal/repository`. Error wrapping, context propagation, structured log cùng field name với .NET. |
+| 5 | **`flink-job`** | Tháng 4 | Mọi job **phải** khai báo watermark strategy và giải thích con số. Cấu hình checkpoint rõ ràng. Late data: side output hay drop — phải chọn có ý thức. Mỗi job một `README.md` giải thích thiết kế. |
+| 6 | **`arc42-docs`** | Tháng 1 | Tài liệu mới thuộc chương nào. ADR vào `09-`, chuyên đề vào `08-`. Format ADR: Context / Decision / Consequences / Alternatives considered. |
+
+### Skill nên **vendor** (không tự viết)
+
+| Skill | Nguồn | Dùng cho |
+|---|---|---|
+| `aspire`, `aspireify`, `aspire-orchestration` | Microsoft | Nếu bạn dùng Aspire cho tầng .NET |
+| `csharp-tunit` hoặc `csharp-xunit` | cộng đồng | Convention viết test C# |
+| `vercel-react-best-practices` | Vercel | **Chỉ khi** làm dashboard bằng Next.js — nếu dùng Blazor thì bỏ |
+| `catalog-documentation-creator` | EventCatalog | Nếu sau này publish event catalog dạng site |
+
+> **Vendor là copy vào repo, không phải cài global.** Mục đích chính là **mọi người (và mọi máy) đều có AI hành xử giống nhau** — kể cả bạn của 3 tháng sau.
+
+### Mẫu `SKILL.md` — dùng luôn cho `kafka-conventions`
+
+```markdown
+---
+name: kafka-conventions
+description: >-
+  Quy tắc bắt buộc khi làm việc với Kafka trong repo này — đặt tên topic,
+  chọn partition key, DLQ, idempotent consumer, trace context.
+  USE FOR: tạo topic mới, viết producer/consumer, thêm integration event,
+  sửa file trong proto/events/, cấu hình consumer group, xử lý retry.
+  DO NOT USE FOR: Flink job (dùng flink-job), thay đổi schema proto
+  (dùng proto-contract), gRPC request/response (dùng proto-contract).
+metadata:
+  version: "1.0"
+---
+
+# Kafka Conventions
+
+## Đặt tên topic
+
+`<context>.<aggregate>.<v1>` — ví dụ `ordering.order.v1`, `catalog.product.v1`.
+Không dùng số nhiều. Không viết hoa. Version nằm ở cuối, không ở giữa.
+
+## Partition key — luật cứng
+
+| Topic | Key | Vì sao |
+|---|---|---|
+| `ordering.order.v1` | `OrderId` | Mọi event của một đơn phải giữ đúng thứ tự |
+| `user.click.v1` | `SessionId` | Sessionization cần cùng session vào cùng partition |
+
+**Không bao giờ** dùng `CustomerId` làm key cho `ordering.*` — khách VIP tạo hot partition.
+
+## Bắt buộc với mọi consumer
+
+1. Idempotent — xử lý lại cùng message không được đổi kết quả
+2. Commit offset **sau** khi xử lý xong, không phải trước
+3. Có DLQ: `<topic>.dlq`, và retry topic có exponential backoff
+4. Extract trace context từ Kafka header (xem `references/tracing.md`)
+
+## Trước khi tạo topic mới
+
+Cập nhật `docs/08-cross-cutting-concepts/event-catalog.md` **trước**, code sau.
+Không có dòng trong event catalog thì không có topic.
+```
+
+### `CLAUDE.md` ở gốc repo — ngắn thôi
+
+Không lặp lại nội dung skill. Chỉ ghi những gì áp dụng cho **mọi** task:
+
+```markdown
+# Agent Instructions
+
+## Lệnh chuẩn — luôn dùng, đừng gọi trực tiếp dotnet/go/pytest
+- Build & chạy: `make up` · chỉ hạ tầng: `make infra`
+- Test: `make test` · architecture test: `make arch` · lint: `make lint`
+- Sinh lại stub proto: `make proto`
+
+## Luật tuyệt đối
+1. KHÔNG sửa tay file trong `building-blocks/gen/` — chạy `make proto`
+2. KHÔNG để service này tham chiếu package của service khác
+3. KHÔNG thêm topic Kafka mà chưa cập nhật event catalog
+4. Mọi quyết định kiến trúc → một ADR trong `docs/09-architecture-decisions/`
+
+## Khi làm việc với vùng cụ thể
+Đọc skill tương ứng trong `.agents/skills/` trước khi viết code.
+```
+
+Thêm `AGENTS.md` một dòng trỏ về `CLAUDE.md` để agent nào cũng tìm được.
+
+### Giữ skill không bị lỗi thời
+
+| Rủi ro | Cách chặn |
+|---|---|
+| Skill nói một đằng, `tests/arch/` ép một nẻo | Khi sửa luật, **sửa cả hai trong cùng PR**. Ghi vào checklist PR template. |
+| Skill viết rồi bỏ đó, không ai đọc | Cuối mỗi tháng, đọc lại skill của tháng đó — 15 phút |
+| Vendor skill lỗi thời so với upstream | Ghi rõ nguồn + phiên bản trong `metadata`, kiểm tra lại ở tháng 6 |
+
+---
+
 ## Việc cần làm NGAY
 
 Trước khi viết dòng code đầu tiên, viết ba tài liệu này:
@@ -857,5 +996,6 @@ Trước khi viết dòng code đầu tiên, viết ba tài liệu này:
 2. **`docs/08-cross-cutting-concepts/event-catalog.md`** — bảng: event · schema · producer · consumer · partition key
 3. **`docs/09-architecture-decisions/001-why-polyglot.md`** — lý do chọn từng ngôn ngữ, kèm trade-off thừa nhận thẳng thắn
 4. Khung `docs/` arc42 — 12 file rỗng chỉ có tiêu đề. Có khung rồi thì viết dần dễ hơn nhiều so với đối diện trang trắng.
+5. **`CLAUDE.md` + `.agents/skills/proto-contract/` + `.agents/skills/ddd-dotnet/`** — xem [mục 15](#15-agent-skills--ghim-hướng-dẫn-ai-vào-repo). Viết trước khi có code thì AI sinh code đúng convention ngay từ file đầu tiên.
 
 > Có ranh giới service và event catalog rồi thì `proto/` viết ra sẽ đúng ngay lần đầu — và `proto/` đúng thì mọi service viết sau đó đều đúng theo.
