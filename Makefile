@@ -38,7 +38,7 @@ proto: ## Lint and regenerate all stubs from proto/
 	cd proto && buf lint && buf generate
 
 proto-check: ## Detect breaking contract changes against main
-	cd proto && buf breaking --against '.git#branch=main'
+	buf breaking proto --against '.git#branch=main,subdir=proto'
 
 ## ── Quality ──────────────────────────────────────────────────────────
 
