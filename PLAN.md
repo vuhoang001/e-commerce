@@ -1,98 +1,98 @@
-# ecommerce-polyglot — Kế hoạch xây dựng
+# ecommerce-polyglot — Build Plan
 
-> Hệ thống e-commerce microservices **đa ngôn ngữ**: C# (nghiệp vụ) · Go (throughput) · Python (AI/data) · Java (streaming).
-> Giao tiếp **contract-first** qua gRPC (sync) và Kafka (async).
+> A **polyglot** e-commerce microservices system: C# (business logic) · Go (throughput) · Python (AI/data) · Java (streaming).
+> **Contract-first** communication over gRPC (sync) and Kafka (async).
 >
-> - **Thời lượng:** 6 tháng
-> - **Mục tiêu kép:** kiến trúc microservices tử tế + portfolio cho vị trí Data Engineer (Streaming)
-> - **Ngày lập:** 2026-08-28
-> - *Thay thế bản kế hoạch trước tại `~/flowmart/PLAN.md`*
+> - **Duration:** 6 months
+> - **Dual goal:** a genuinely well-built microservices architecture, and a portfolio for Data Engineer (Streaming) roles
+> - **Created:** 2026-08-28
+> - **Project language: English.** All docs, code comments, commit messages, and ADRs are written in English.
 
 ---
 
-## Mục lục
+## Table of Contents
 
-1. [Đánh giá cấu trúc bạn đề xuất](#1-đánh-giá-cấu-trúc-bạn-đề-xuất)
-2. [Cấu trúc hoàn chỉnh](#2-cấu-trúc-hoàn-chỉnh)
-3. [Phân chia service — ngôn ngữ nào, vì sao](#3-phân-chia-service--ngôn-ngữ-nào-vì-sao)
-3b. [Gateway C# + YARP — làm được gì, không làm được gì](#3b-gateway-c--yarp--làm-được-gì-không-làm-được-gì)
+1. [Review of the proposed structure](#1-review-of-the-proposed-structure)
+2. [Complete structure](#2-complete-structure)
+3. [Service breakdown — which language, and why](#3-service-breakdown--which-language-and-why)
+3b. [Gateway on C# + YARP — what it can and cannot do](#3b-gateway-on-c--yarp--what-it-can-and-cannot-do)
 4. [Contract-first workflow](#4-contract-first-workflow)
-5. [Quy tắc giao tiếp: gRPC hay Kafka](#5-quy-tắc-giao-tiếp-grpc-hay-kafka)
-6. [Trải nghiệm dev local](#6-trải-nghiệm-dev-local)
-7. [Observability xuyên ngôn ngữ](#7-observability-xuyên-ngôn-ngữ)
-8. [Lộ trình 6 tháng](#8-lộ-trình-6-tháng)
-9. [CI/CD cho monorepo đa ngôn ngữ](#9-cicd-cho-monorepo-đa-ngôn-ngữ)
-10. [Cạm bẫy đã biết](#10-cạm-bẫy-đã-biết)
-11. [Phạm vi loại trừ](#11-phạm-vi-loại-trừ)
-12. [Bản đồ phỏng vấn](#12-bản-đồ-phỏng-vấn)
-13. [Theo dõi tiến độ](#13-theo-dõi-tiến-độ)
-14. [Đối chiếu với BookWorm](#14-đối-chiếu-với-bookworm)
-15. [Agent skills — ghim hướng dẫn AI vào repo](#15-agent-skills--ghim-hướng-dẫn-ai-vào-repo)
+5. [Communication rule: gRPC or Kafka](#5-communication-rule-grpc-or-kafka)
+6. [Local development experience](#6-local-development-experience)
+7. [Cross-language observability](#7-cross-language-observability)
+8. [Six-month roadmap](#8-six-month-roadmap)
+9. [CI/CD for a polyglot monorepo](#9-cicd-for-a-polyglot-monorepo)
+10. [Known pitfalls](#10-known-pitfalls)
+11. [Out of scope](#11-out-of-scope)
+12. [Interview map](#12-interview-map)
+13. [Progress tracker](#13-progress-tracker)
+14. [Comparison with BookWorm](#14-comparison-with-bookworm)
+15. [Agent skills — pinning AI guidance into the repo](#15-agent-skills--pinning-ai-guidance-into-the-repo)
 
 ---
 
-## 1. Đánh giá cấu trúc bạn đề xuất
+## 1. Review of the proposed structure
 
-### Đúng rồi, giữ nguyên
+### Right as-is — keep
 
-| Điểm | Vì sao đúng |
+| Decision | Why it's right |
 |---|---|
-| `proto/` ở **gốc repo** | Contract là tài sản chung, không thuộc service nào. Đặt ở gốc là quyết định đúng — nó buộc mọi thay đổi contract phải hiển thị rõ trong PR. |
-| Mỗi service có `Dockerfile` riêng | Bắt buộc với polyglot. Mỗi ngôn ngữ có base image và build stage khác nhau. |
-| `building-blocks/` | Tên hay (mượn từ eShopOnContainers). Đây là nơi chống lặp code hạ tầng. |
-| Cấu trúc *nội bộ* khác nhau theo ngôn ngữ | Đúng. `Domain/Application/Infrastructure` cho C#, `cmd/internal` cho Go — **đừng ép chung một khuôn**, mỗi cộng đồng có convention riêng. |
+| `proto/` at the **repo root** | Contracts are shared property; they belong to no single service. Putting them at the root forces every contract change to show up plainly in the PR diff. |
+| A `Dockerfile` per service | Mandatory for polyglot. Each language has a different base image and build stage. |
+| `building-blocks/` | Good name (borrowed from eShopOnContainers). This is where infrastructure code stops being duplicated. |
+| Different *internal* layout per language | Correct. `Domain/Application/Infrastructure` for C#, `cmd/internal` for Go — **don't force one mould**; each community has its own conventions. |
 
-### Sáu chỗ cần sửa
+### Six things to fix
 
-| # | Vấn đề | Sửa thế nào |
+| # | Problem | Fix |
 |---|---|---|
-| 1 | **`src/services/order-service/src/`** — lồng `src` hai lần | Bỏ `src/` ngoài cùng. Top level thành `services/`, `proto/`, `building-blocks/`. Đường dẫn ngắn đi một tầng. |
-| 2 | **Go: có cả `cmd/` lẫn `main.go` ở gốc** | Mâu thuẫn convention. Chọn `cmd/server/main.go`, gốc service không có `main.go`. |
-| 3 | **Chưa có chỗ chứa code sinh ra từ proto** | `buf generate` phải đổ vào đâu đó. → `building-blocks/gen/{csharp,go,python,java}/` |
-| 4 | **Chỉ có gRPC, không có event schema** | E-commerce **bắt buộc** có async. Thêm `proto/events/` cho Kafka message. |
-| 5 | **Thiếu `deploy/`, `docs/`, `tests/`, `tools/`** | Không có thư mục ADR thì không ai biết bạn đã cân nhắc gì. Không có `tests/e2e/` thì không chứng minh được hệ thống chạy thật. |
-| 6 | **Một `docker-compose.yml` cho tất cả** | Sẽ đau ở tháng thứ 2. Tách: `compose.infra.yml` (Kafka, Postgres, Redis...) chạy 1 lần rồi để đó, `compose.services.yml` restart liên tục. |
+| 1 | **`src/services/order-service/src/`** — `src` nested twice | Drop the outer `src/`. Top level becomes `services/`, `proto/`, `building-blocks/`. One level shorter everywhere. |
+| 2 | **Go has both `cmd/` and a root `main.go`** | Conflicting conventions. Pick `cmd/server/main.go`; no `main.go` at the service root. |
+| 3 | **Nowhere for proto-generated code to land** | `buf generate` has to write somewhere. → `building-blocks/gen/{csharp,go,python,java}/` |
+| 4 | **gRPC only, no event schemas** | E-commerce **requires** async. Add `proto/events/` for Kafka messages. |
+| 5 | **Missing `deploy/`, `docs/`, `tests/`, `tools/`** | Without an ADR directory nobody knows what you weighed up. Without `tests/e2e/` there's no proof the system actually runs. |
+| 6 | **One `docker-compose.yml` for everything** | This starts hurting in month 2. Split it: `compose.infra.yml` (Kafka, Postgres, Redis…) starts once and stays up; `compose.services.yml` restarts constantly. |
 
-### Một câu hỏi kiến trúc còn thiếu
+### One architectural question that's missing
 
-Bạn có **3 service và một web client**. Client sẽ gọi thẳng 3 service, hay qua một cửa?
-→ Cần thêm **`api-gateway`** (C# / .NET + YARP). Không có nó thì trình duyệt phải nói gRPC (không làm được trực tiếp), phải xử lý CORS 3 lần, và auth phải làm 3 lần.
+You have **three services and a web client**. Does the client call all three directly, or go through one door?
+→ You need an **`api-gateway`** (C# / .NET + YARP). Without it the browser has to speak gRPC (it can't directly), CORS is handled three times, and auth is implemented three times.
 
-> ⚠️ **Lưu ý kỹ thuật quan trọng — xem [mục 3b](#3b-gateway-c--yarp-yarp-làm-được-gì-và-không-làm-được-gì).** YARP **không** dịch REST ↔ gRPC. Nó là reverse proxy HTTP. Việc dịch phải làm bằng cách khác, và điều đó thay đổi vai trò của gateway.
+> ⚠️ **Important technical caveat — see [section 3b](#3b-gateway-on-c--yarp--what-it-can-and-cannot-do).** YARP does **not** translate REST ↔ gRPC. It is an HTTP reverse proxy. The translation has to happen another way, and that changes the gateway's role.
 
 ---
 
-## 2. Cấu trúc hoàn chỉnh
+## 2. Complete structure
 
 ```
 ecommerce-polyglot/
 ├── .agents/
-│   └── skills/                     # ★ hướng dẫn cho AI coding agent — xem mục 15
-│       ├── kafka-conventions/      #   tự viết
-│       ├── proto-contract/         #   tự viết
-│       ├── flink-job/              #   tự viết
-│       ├── go-service/             #   tự viết
-│       ├── ddd-dotnet/             #   tự viết
-│       ├── aspire/                 #   vendor từ Microsoft
-│       └── csharp-tunit/           #   vendor
-├── AGENTS.md                       # trỏ mọi agent về CLAUDE.md
-├── CLAUDE.md                       # quy tắc chung: build/test/lint bằng lệnh nào
-├── mise.toml                       # ★ PIN phiên bản .NET / Go / Python / Java / buf
-├── Makefile                        # điểm vào duy nhất: make up / make proto / make test
+│   └── skills/                     # ★ guidance for AI coding agents — see section 15
+│       ├── kafka-conventions/      #   authored here
+│       ├── proto-contract/         #   authored here
+│       ├── flink-job/              #   authored here
+│       ├── go-service/             #   authored here
+│       ├── ddd-dotnet/             #   authored here
+│       ├── aspire/                 #   vendored from Microsoft
+│       └── csharp-tunit/           #   vendored
+├── AGENTS.md                       # points every agent at CLAUDE.md
+├── CLAUDE.md                       # repo-wide rules: which command to build/test/lint with
+├── mise.toml                       # ★ PINS .NET / Go / Python / Java / buf versions
+├── Makefile                        # the single entry point: make up / make proto / make test
 ├── compose.infra.yml               # Kafka, Postgres, Redis, OpenSearch, MinIO, OTel
-├── compose.services.yml            # 6 service + gateway
+├── compose.services.yml            # 6 services + gateway
 ├── .env.example
 ├── .editorconfig
 │
-├── proto/                          # ★ NGUỒN SỰ THẬT DUY NHẤT cho mọi contract
+├── proto/                          # ★ THE SINGLE SOURCE OF TRUTH for every contract
 │   ├── buf.yaml                    # lint + breaking-change rules
-│   ├── buf.gen.yaml                # sinh code cho 4 ngôn ngữ
+│   ├── buf.gen.yaml                # generates code for all four languages
 │   ├── rpc/                        # ── gRPC: request/response ──
 │   │   ├── order/v1/order_service.proto
 │   │   ├── search/v1/search_service.proto
 │   │   ├── recommendation/v1/recommendation_service.proto
 │   │   └── inventory/v1/inventory_service.proto
-│   ├── events/                     # ── Kafka: sự kiện đã xảy ra ──
+│   ├── events/                     # ── Kafka: things that already happened ──
 │   │   ├── order/v1/order_placed.proto
 │   │   ├── order/v1/order_cancelled.proto
 │   │   ├── catalog/v1/product_updated.proto
@@ -102,32 +102,33 @@ ecommerce-polyglot/
 │       └── pagination.proto
 │
 ├── services/
-│   ├── order-service/              # [C# / .NET 10]  DDD, transaction, saga
+│   ├── order-service/              # [C# / .NET 10]  DDD, transactions, saga
 │   │   ├── src/
-│   │   │   ├── Domain/             # aggregate, value object — 0 dependency
-│   │   │   ├── Application/        # command/query handler, MediatR
+│   │   │   ├── Domain/             # aggregates, value objects — zero dependencies
+│   │   │   ├── Application/        # command/query handlers, MediatR
 │   │   │   ├── Infrastructure/     # EF Core, Kafka producer, outbox
-│   │   │   └── Api/                # gRPC service impl + host
+│   │   │   └── Api/                # gRPC service implementation + host
 │   │   ├── tests/
 │   │   │   ├── Domain.UnitTests/
-│   │   │   └── Api.IntegrationTests/
+│   │   │   ├── Api.IntegrationTests/
+│   │   │   └── ContractTests/      # lives WITH the service that owns the contract
 │   │   ├── migrations/
 │   │   └── Dockerfile
 │   │
 │   ├── payment-service/            # [C# / .NET 10]  saga participant
-│   │   └── ... (như trên, gọn hơn)
+│   │   └── ... (same shape, smaller)
 │   │
 │   ├── search-service/             # [Go]  low latency, high QPS
 │   │   ├── cmd/server/main.go
 │   │   ├── internal/
-│   │   │   ├── handler/            # gRPC handler
+│   │   │   ├── handler/            # gRPC handlers
 │   │   │   ├── indexer/            # consume Kafka → OpenSearch
-│   │   │   ├── search/             # query builder, ranking
+│   │   │   ├── search/             # query building, ranking
 │   │   │   └── config/
 │   │   ├── go.mod
 │   │   └── Dockerfile
 │   │
-│   ├── inventory-service/          # [Go]  reserve/release stock, tối ưu concurrency
+│   ├── inventory-service/          # [Go]  reserve/release stock under contention
 │   │   ├── cmd/server/main.go
 │   │   ├── internal/
 │   │   └── Dockerfile
@@ -135,13 +136,13 @@ ecommerce-polyglot/
 │   ├── recommendation-service/     # [Python 3.12]  AI / embeddings
 │   │   ├── app/
 │   │   │   ├── grpc_server.py
-│   │   │   ├── models/             # embedding, ANN index
-│   │   │   ├── pipelines/          # batch retrain
-│   │   │   └── consumers/          # Kafka → cập nhật feature
+│   │   │   ├── models/             # embeddings, ANN index
+│   │   │   ├── pipelines/          # batch retraining
+│   │   │   └── consumers/          # Kafka → feature updates
 │   │   ├── pyproject.toml
 │   │   └── Dockerfile
 │   │
-│   ├── stream-processor/           # [Java 21 + Flink 2.x]  ← thêm ở tháng 4
+│   ├── stream-processor/           # [Java 21 + Flink 2.x]  ← added in month 4
 │   │   ├── jobs/
 │   │   │   ├── revenue-rollup/
 │   │   │   ├── fraud-detection/
@@ -149,33 +150,33 @@ ecommerce-polyglot/
 │   │   ├── pom.xml
 │   │   └── Dockerfile
 │   │
-│   └── api-gateway/                # [C# / .NET 10 + YARP]  BFF, auth, rate limit
+│   └── api-gateway/                # [C# / .NET 10 + YARP]  BFF, auth, rate limiting
 │       ├── src/
-│       │   ├── Endpoints/          # Minimal API — dịch REST → gRPC client
-│       │   ├── Clients/            # gRPC client sinh từ proto
-│       │   ├── Middleware/         # auth, rate limit, correlation id
+│       │   ├── Endpoints/          # Minimal API — translates REST → gRPC client calls
+│       │   ├── Clients/            # gRPC clients generated from proto
+│       │   ├── Middleware/         # auth, rate limiting, correlation id
 │       │   └── Program.cs          # YARP routes + OTel
 │       ├── appsettings.json        # YARP ReverseProxy config
 │       ├── tests/
 │       └── Dockerfile
 │
 ├── building-blocks/
-│   ├── gen/                        # ★ code sinh từ proto — KHÔNG sửa tay
+│   ├── gen/                        # ★ generated from proto — NEVER hand-edited
 │   │   ├── csharp/  go/  python/  java/
 │   │
 │   ├── chassis-dotnet/             # ★ microservices chassis (C#)
-│   │   ├── Cqrs/                   #   MediatR + pipeline behaviors
-│   │   ├── Endpoints/              #   Minimal API convention, versioning
+│   │   ├── Cqrs/                   #   MediatR + pipeline behaviours
+│   │   ├── Endpoints/              #   Minimal API conventions, versioning
 │   │   ├── EventBus/               #   Kafka producer/consumer, outbox, DLQ
 │   │   ├── Persistence/            #   EF Core base, UnitOfWork, soft delete
 │   │   ├── Caching/                #   Redis, cache-aside
-│   │   ├── Security/               #   JWT, authorization policy
+│   │   ├── Security/               #   JWT, authorization policies
 │   │   ├── Observability/          #   OTel tracing, metrics, structured logging
-│   │   ├── Exceptions/             #   ProblemDetails, exception filter
-│   │   ├── Validation/             #   FluentValidation convention
+│   │   ├── Exceptions/             #   ProblemDetails, exception filters
+│   │   ├── Validation/             #   FluentValidation conventions
 │   │   └── Resilience/             #   Polly: retry, circuit breaker, timeout
 │   │
-│   ├── chassis-go/                 # cùng 10 nhóm, viết theo cách Go
+│   ├── chassis-go/                 # same ten concerns, written the Go way
 │   │   ├── kafka/  otel/  httpx/  config/  logx/  resilience/
 │   │
 │   ├── chassis-python/
@@ -188,32 +189,32 @@ ecommerce-polyglot/
 │
 ├── deploy/
 │   ├── k8s/
-│   ├── connectors/                 # Debezium config
-│   └── otel/                       # OpenTelemetry Collector config
+│   ├── connectors/                 # Debezium configuration
+│   └── otel/                       # OpenTelemetry Collector configuration
 │
 ├── tests/
-│   ├── e2e/                        # k6 hoặc Playwright — chạy qua gateway
-│   └── arch/                       # ★ architecture test — ép ranh giới, chạy trong CI
+│   ├── e2e/                        # k6 or Playwright — driven through the gateway
+│   └── arch/                       # ★ architecture tests — enforce boundaries, run in CI
 │       ├── dotnet/                 #   NetArchTest / ArchUnitNET
 │       ├── go/                     #   go-arch-lint
 │       └── python/                 #   import-linter
-│                                   # (contract test nằm TRONG từng service, xem dưới)
+│                                   # (contract tests live INSIDE each service)
 │
-├── docs/                           # ★ khung arc42 — chuẩn tài liệu kiến trúc
+├── docs/                           # ★ arc42 skeleton — the standard architecture doc template
 │   ├── 01-introduction-and-goals.md
 │   ├── 02-architecture-constraints.md
 │   ├── 03-context-and-scope.md
 │   ├── 04-solution-strategy.md
 │   ├── 05-building-block-view.md
-│   ├── 06-runtime-view.md          #   ← saga, luồng event vẽ ở đây
+│   ├── 06-runtime-view.md          #   ← saga and event flows are drawn here
 │   ├── 07-deployment-view.md
-│   ├── 08-cross-cutting-concepts/  #   ← các tài liệu chuyên đề thành phụ lục
+│   ├── 08-cross-cutting-concepts/  #   ← topic papers become appendices here
 │   │   ├── event-catalog.md
 │   │   ├── partition-strategy.md
 │   │   ├── schema-evolution.md
 │   │   ├── observability.md
 │   │   └── service-boundaries.md
-│   ├── 09-architecture-decisions/  #   ← ADR nằm ở đây (arc42 chương 9)
+│   ├── 09-architecture-decisions/  #   ← ADRs live here (arc42 chapter 9)
 │   ├── 10-quality-requirements.md
 │   ├── 11-risks-and-technical-debt.md
 │   ├── 12-glossary.md
@@ -224,17 +225,17 @@ ecommerce-polyglot/
     └── devcontainer/
 ```
 
-**Thay đổi lớn nhất so với bản của bạn:** bỏ `src/` ngoài cùng, tách `proto/rpc` với `proto/events`, thêm `building-blocks/gen/`, thêm `api-gateway`.
+**Biggest changes from the original sketch:** drop the outer `src/`, split `proto/rpc` from `proto/events`, add `building-blocks/gen/`, add `api-gateway`.
 
-### Ba quyết định cấu trúc mượn từ BookWorm
+### Three structural decisions borrowed from BookWorm
 
-| Quyết định | Vì sao |
+| Decision | Why |
 |---|---|
-| **`mise.toml` ở gốc** | Bạn có **4 toolchain**. Không pin phiên bản thì trong vòng một tháng repo chỉ chạy được trên máy bạn. Đây là file quan trọng thứ hai sau `Makefile`. |
-| **`docs/` theo arc42** | Thay 5 file `.md` rời rạc bằng khung 12 chương chuẩn công nghiệp. Các tài liệu chuyên đề (event catalog, partition strategy) trở thành **phụ lục của chương 08**, không mất đi. ADR về đúng chỗ của nó — **chương 09**. |
-| **Contract test nằm TRONG service** | `services/order-service/tests/ContractTests/` chứ không phải `tests/contract/` ở ngoài. Contract test thuộc về service sở hữu contract — cùng nguyên tắc với "schema thuộc về producer". |
+| **`mise.toml` at the root** | You have **four toolchains**. Without pinned versions, within a month the repo only runs on your machine. This is the second most important file after `Makefile`. |
+| **`docs/` following arc42** | Replaces five scattered `.md` files with the industry-standard 12-chapter skeleton. The topic papers (event catalog, partition strategy) become **appendices to chapter 08** — nothing is lost. ADRs land where they belong: **chapter 09**. |
+| **Contract tests INSIDE the service** | `services/order-service/tests/ContractTests/`, not a shared `tests/contract/`. A contract test belongs to the service that owns the contract — the same principle as "the schema belongs to the producer". |
 
-### `mise.toml` — viết ngay tuần đầu
+### `mise.toml` — write it in week one
 
 ```toml
 [tools]
@@ -252,54 +253,54 @@ _.file = ".env"
 run = "docker compose -f compose.infra.yml -f compose.services.yml up -d --build"
 ```
 
-> `mise install` → cả 4 toolchain đúng phiên bản. Không có dòng "cài .NET 10 trước" trong README nữa.
+> `mise install` gets all four toolchains on the right version. No more "install .NET 10 first" line in the README.
 
 ---
 
-## 3. Phân chia service — ngôn ngữ nào, vì sao
+## 3. Service breakdown — which language, and why
 
-Polyglot chỉ đáng giá khi mỗi lựa chọn có **lý do kỹ thuật thật**. Bảng này là câu trả lời khi phỏng vấn hỏi *"sao không viết hết bằng một ngôn ngữ?"*
+Polyglot only pays off when every choice has a **real technical reason**. This table is your answer when an interviewer asks *"why not write the whole thing in one language?"*
 
-| Service | Ngôn ngữ | Lý do thật | Nếu chọn sai thì sao |
+| Service | Language | The real reason | What you'd lose otherwise |
 |---|---|---|---|
-| **order-service** | C# / .NET | Nghiệp vụ phức tạp nhất: aggregate, invariant, transaction, saga. Type system + EF Core + tooling refactor mạnh nhất. | Viết bằng Go: thiếu generic-rich modeling, ORM yếu, code DDD trở nên rườm rà |
-| **payment-service** | C# | Cùng bounded context ngôn ngữ với order, chia sẻ `building-blocks/dotnet` | — |
-| **search-service** | Go | I/O-bound, QPS cao, latency p99 quan trọng. Goroutine + binary 15MB + khởi động <100ms → autoscale rẻ. | Viết bằng C#: cold start chậm hơn, RAM gấp 3–4× cho cùng throughput |
-| **inventory-service** | Go | Contention cao (nhiều người giành cùng một SKU). Cần kiểm soát concurrency ở mức thấp. | — |
-| **recommendation-service** | Python | Hệ sinh thái ML: `sentence-transformers`, `faiss`, `pandas`, `pgvector`. Không ngôn ngữ nào thay được. | Viết bằng C#: ML.NET tồn tại nhưng hệ sinh thái mỏng hơn hàng chục lần |
-| **stream-processor** | Java | Flink là Java-native. DataStream API + Flink SQL. | PyFlink: chậm hơn, thiếu tính năng; Flink.NET: không ai dùng, không ai phỏng vấn |
-| **api-gateway** | C# / .NET + YARP | Cùng toolchain với order/payment → dùng chung `building-blocks/dotnet`. YARP do team ASP.NET làm, tích hợp thẳng Aspire, OTel, auth. BFF aggregate viết bằng LINQ dễ chịu hơn Go. | Viết bằng Go: image nhỏ hơn (~15MB vs ~110MB), cold start nhanh hơn — nhưng phải nuôi thêm một hệ `building-blocks` |
+| **order-service** | C# / .NET | The most complex business logic: aggregates, invariants, transactions, saga. Strongest type system, EF Core, best refactoring tooling. | In Go: weaker modelling, thin ORM story, DDD code turns verbose |
+| **payment-service** | C# | Shares a language boundary with order, reuses `chassis-dotnet` | — |
+| **search-service** | Go | I/O-bound, high QPS, p99 latency matters. Goroutines + a 15 MB binary + <100 ms startup make autoscaling cheap. | In C#: slower cold start, 3–4× the RAM for the same throughput |
+| **inventory-service** | Go | High contention (many buyers racing for one SKU). Needs low-level concurrency control. | — |
+| **recommendation-service** | Python | The ML ecosystem: `sentence-transformers`, `faiss`, `pandas`, `pgvector`. No other language substitutes for it. | In C#: ML.NET exists, but the ecosystem is an order of magnitude thinner |
+| **stream-processor** | Java | Flink is Java-native. DataStream API + Flink SQL. | PyFlink: slower, feature-lagging. Flink.NET: nobody uses it, nobody interviews on it |
+| **api-gateway** | C# / .NET + YARP | Same toolchain as order/payment → shares `chassis-dotnet`. YARP is built by the ASP.NET team and integrates directly with Aspire, OTel and auth. BFF aggregation in LINQ is far more pleasant than in Go. | In Go: smaller image (~15 MB vs ~110 MB) and faster cold start — at the cost of maintaining a second building-blocks stack |
 
-> **Nói thẳng:** polyglot có chi phí thật — 4 toolchain, 4 cách log, 4 job CI, khó share code. Trong công ty thật, đây thường là quyết định **sai** trừ khi có lý do rõ ràng.
-> Với portfolio thì hợp lý, vì mục tiêu chính là **chứng minh năng lực đa nền tảng**. Hãy viết điều này ra trong `docs/09-architecture-decisions/001-why-polyglot.md` — thừa nhận trade-off làm bạn đáng tin hơn là giả vờ không có.
+> **Said plainly:** polyglot has a real cost — four toolchains, four logging styles, four CI jobs, hard-to-share code. In a real company this is usually the **wrong** call unless the reason is clear.
+> For a portfolio it is justified, because the goal *is* demonstrating multi-platform capability. Write that down in `docs/09-architecture-decisions/001-why-polyglot.md` — admitting the trade-off makes you more credible than pretending it doesn't exist.
 
 ---
 
-## 3b. Gateway C# + YARP — làm được gì, không làm được gì
+## 3b. Gateway on C# + YARP — what it can and cannot do
 
-> Đọc mục này **trước khi** viết dòng code gateway đầu tiên. Đổi Go → C# không phải là thay tên ngôn ngữ; nó thay đổi cách gateway hoạt động.
+> Read this **before** writing the first line of gateway code. Switching Go → C# is not a rename; it changes how the gateway works.
 
-### Hiểu nhầm phổ biến
+### The common misconception
 
-**YARP không dịch REST ↔ gRPC.** YARP là reverse proxy **HTTP → HTTP**. Nó route, load-balance, transform header, retry — nhưng nó không biết gì về Protobuf. Cho một request `GET /v1/orders/123` đi qua YARP, thứ đến đích vẫn là một request HTTP, không phải một lời gọi gRPC.
+**YARP does not translate REST ↔ gRPC.** YARP is an **HTTP → HTTP** reverse proxy. It routes, load-balances, transforms headers, retries — but it knows nothing about Protobuf. Send `GET /v1/orders/123` through YARP and what arrives at the destination is still an HTTP request, not a gRPC call.
 
-Trong khi đó `grpc-gateway` (Go) **có** sinh ra proxy REST↔gRPC từ annotation `google.api.http` trong proto. Đây là năng lực bạn vừa đánh đổi đi.
+`grpc-gateway` (Go), by contrast, **does** generate a REST↔gRPC proxy from `google.api.http` annotations in the proto. That is the capability you just traded away.
 
-### Ba cách lấy lại năng lực đó trong .NET
+### Three ways to get it back in .NET
 
-| Cách | Cơ chế | Vấn đề |
+| Option | Mechanism | The catch |
 |---|---|---|
-| **A. gRPC JSON transcoding trong từng service** | `Microsoft.AspNetCore.Grpc.JsonTranscoding` đọc annotation `google.api.http`, tự expose REST song song với gRPC. YARP chỉ route. | **Chỉ chạy trên .NET.** `search-service` và `inventory-service` viết bằng Go → không dùng được. Phải cài thêm `grpc-gateway` cho hai service Go → lại quay về hai cơ chế song song. |
-| **B. Gateway giữ gRPC client, expose Minimal API** ★ | Gateway tham chiếu stub sinh từ proto, gọi service bằng gRPC client, expose REST bằng Minimal API viết tay. | Phải viết tay endpoint. Nhưng số endpoint public thực tế ít hơn số RPC nhiều. |
-| **C. Đặt Envoy trước, YARP sau** | Envoy làm gRPC-JSON transcoder, YARP làm auth/BFF | Hai lớp proxy — độ phức tạp không đáng cho dự án này |
+| **A. gRPC JSON transcoding in each service** | `Microsoft.AspNetCore.Grpc.JsonTranscoding` reads `google.api.http` annotations and exposes REST alongside gRPC. YARP just routes. | **.NET only.** `search-service` and `inventory-service` are Go, so they can't use it. You'd add `grpc-gateway` for the two Go services — back to two parallel mechanisms. |
+| **B. Gateway holds gRPC clients, exposes Minimal API** ★ | The gateway references proto-generated stubs, calls services over gRPC, and exposes REST through hand-written Minimal API endpoints. | Endpoints are hand-written. But the number of genuinely public endpoints is far smaller than the number of RPCs. |
+| **C. Envoy in front, YARP behind** | Envoy does gRPC-JSON transcoding, YARP does auth/BFF | Two proxy layers — complexity this project doesn't earn |
 
-### Khuyến nghị: cách B
+### Recommendation: option B
 
 ```csharp
 // services/api-gateway/src/Endpoints/OrderEndpoints.cs
 app.MapGet("/api/orders/{id:guid}", async (
         Guid id,
-        OrderService.OrderServiceClient orders,   // stub sinh từ proto/rpc/order/v1
+        OrderService.OrderServiceClient orders,   // stub generated from proto/rpc/order/v1
         CancellationToken ct) =>
 {
     var reply = await orders.GetOrderAsync(
@@ -310,21 +311,21 @@ app.MapGet("/api/orders/{id:guid}", async (
 .RequireRateLimiting("per-user");
 ```
 
-**Vì sao cách B tốt hơn bạn tưởng:**
+**Why option B is better than it first looks:**
 
-1. **Gateway trở thành BFF thật, không phải proxy ngu.** Endpoint `GET /api/orders/{id}` có thể gọi song song `order`, `inventory`, `recommendation` rồi gộp — đúng thứ frontend cần, thay vì bắt trình duyệt gọi 3 lần.
-2. **Contract vẫn được kiểm soát.** Stub gRPC vẫn sinh từ `proto/`, `buf breaking` vẫn chặn thay đổi phá vỡ. Chỉ có lớp REST là viết tay.
-3. **Type-safe đầu-cuối.** Đổi field trong proto → gateway không compile. Với `grpc-gateway` thì lỗi rơi vào runtime.
+1. **The gateway becomes a real BFF, not a dumb proxy.** `GET /api/products/{id}` can fan out to `search`, `recommendation` and `inventory` in parallel and merge the results — exactly what the frontend needs, instead of making the browser issue three calls.
+2. **The contract stays under control.** gRPC stubs are still generated from `proto/`, and `buf breaking` still blocks breaking changes. Only the REST layer is hand-written.
+3. **End-to-end type safety.** Change a proto field and the gateway stops compiling. With `grpc-gateway`, that failure surfaces at runtime.
 
-**YARP dùng vào việc gì trong cách B?**
+**So what does YARP actually do in option B?**
 
-Không phải cho các endpoint gRPC — mà cho những thứ chỉ cần đi thẳng qua:
+Not the gRPC endpoints — the things that only need to pass straight through:
 
 ```jsonc
 // appsettings.json
 "ReverseProxy": {
   "Routes": {
-    "search-passthrough": {                  // search-service tự expose REST qua grpc-gateway
+    "search-passthrough": {                  // search-service exposes REST via its own grpc-gateway
       "ClusterId": "search",
       "Match": { "Path": "/api/search/{**catch-all}" },
       "AuthorizationPolicy": "authenticated",
@@ -337,36 +338,36 @@ Không phải cho các endpoint gRPC — mà cho những thứ chỉ cần đi t
 }
 ```
 
-→ **Mô hình lai:** YARP cho passthrough đơn giản, Minimal API + gRPC client cho những chỗ cần aggregate hoặc cần dịch. Đây là cách dùng YARP đúng bản chất của nó.
+→ **A hybrid model:** YARP for simple passthrough, Minimal API + gRPC clients wherever aggregation or translation is needed. That is YARP used for what it actually is.
 
-### Được và mất khi đổi Go → C#
+### What you gain and lose switching Go → C#
 
-| | Được | Mất |
+| | Gain | Loss |
 |---|---|---|
-| Toolchain | Bớt 1 hệ `building-blocks` — gateway chia sẻ logging/otel/auth với order & payment | — |
-| Aspire | Gateway vào được `AppHost`, service discovery tự động, không cần hard-code URL | — |
-| BFF aggregate | LINQ + `async`/`await` + record type — dễ hơn Go rõ rệt | — |
-| Auth | `Microsoft.AspNetCore.Authentication.JwtBearer` trưởng thành hơn hệ sinh thái Go | — |
-| REST↔gRPC | — | Mất `grpc-gateway` sinh code tự động → phải viết tay Minimal API |
-| Runtime | — | Image ~110MB (vs ~15MB), cold start ~200–400ms (vs <50ms), RAM idle ~60MB (vs ~10MB) |
-| Ngôn ngữ trong repo | Còn **4** (C#, Go, Python, Java) thay vì 4 — Go vẫn còn cho search/inventory | — |
+| Toolchain | One fewer building-blocks stack — the gateway shares logging/otel/auth with order & payment | — |
+| Aspire | The gateway joins the `AppHost`, gets service discovery, no hard-coded URLs | — |
+| BFF aggregation | LINQ + `async`/`await` + records — markedly easier than Go | — |
+| Auth | `Microsoft.AspNetCore.Authentication.JwtBearer` is more mature than the Go equivalents | — |
+| REST↔gRPC | — | No more `grpc-gateway` code generation → hand-written Minimal API |
+| Runtime | — | ~110 MB image (vs ~15 MB), ~200–400 ms cold start (vs <50 ms), ~60 MB idle RAM (vs ~10 MB) |
+| Languages in the repo | Still **four** (C#, Go, Python, Java) — Go remains for search/inventory | — |
 
-> **Đáng ghi vào ADR:** con số runtime ở trên chỉ quan trọng khi gateway phải scale lên hàng chục instance. Ở quy mô dự án này nó không quan trọng, và việc thống nhất toolchain với order/payment có giá trị thực tế lớn hơn. Nhưng hãy nói rõ bạn **biết** trade-off đó, đừng lờ đi.
+> **Worth an ADR:** those runtime numbers only matter once the gateway scales to dozens of instances. At this project's size they don't, and toolchain consolidation with order/payment is worth more in practice. But say explicitly that you **know** the trade-off rather than ignoring it.
 
-### Việc cần thêm vào lộ trình
+### Roadmap consequences
 
-- **Tháng 0.5:** `api-gateway` (C#) với 1 endpoint Minimal API gọi gRPC client → order-service
-- **Tháng 2:** thêm YARP route passthrough cho `search-service` (Go, có `grpc-gateway` riêng)
-- **Tháng 3:** biến gateway thành BFF thật — endpoint `GET /api/products/{id}` gọi song song `search` + `recommendation` + `inventory`
-- **Tháng 5:** gateway là **điểm bắt đầu của distributed trace** — nơi sinh `traceparent` đầu tiên
+- **Month 0.5:** `api-gateway` (C#) with one Minimal API endpoint calling a gRPC client → order-service
+- **Month 2:** add a YARP passthrough route for `search-service` (Go, with its own `grpc-gateway`)
+- **Month 3:** turn the gateway into a real BFF — `GET /api/products/{id}` fans out to `search` + `recommendation` + `inventory`
+- **Month 5:** the gateway is the **origin of the distributed trace** — where the first `traceparent` is minted
 
 ---
 
 ## 4. Contract-first workflow
 
-Đây là phần khiến monorepo đa ngôn ngữ **sống được**.
+This is what keeps a polyglot monorepo **liveable**.
 
-### Công cụ: [`buf`](https://buf.build)
+### Tooling: [`buf`](https://buf.build)
 
 ```yaml
 # proto/buf.yaml
@@ -395,39 +396,39 @@ plugins:
     out: ../building-blocks/gen/java
 ```
 
-### Quy tắc bất di bất dịch
+### Non-negotiable rules
 
-1. **Không ai được sửa file trong `building-blocks/gen/`.** Thêm `.gitattributes`: `building-blocks/gen/** linguist-generated=true`
-2. **`buf breaking` chạy trong CI** trên mọi PR, so với nhánh `main`. Contract vỡ = PR đỏ.
-3. **Version trong đường dẫn** (`order/v1/`). Muốn breaking change? Tạo `v2`, chạy song song, deprecate dần.
-4. **`proto/rpc/` và `proto/events/` khác bản chất:**
-   - `rpc/` = *"tôi hỏi bạn cái này"* → tên là động từ (`GetOrder`, `ReserveStock`)
-   - `events/` = *"việc này đã xảy ra rồi"* → tên là quá khứ (`OrderPlaced`, `StockReserved`)
-5. Sinh code bằng `make proto`, **commit kết quả vào git**. Lý do: dev mới clone về là build được ngay, không cần cài `buf`.
+1. **Nobody edits files under `building-blocks/gen/`.** Add to `.gitattributes`: `building-blocks/gen/** linguist-generated=true`
+2. **`buf breaking` runs in CI** on every PR, against `main`. A broken contract is a red PR.
+3. **Version in the path** (`order/v1/`). Need a breaking change? Create `v2`, run both, deprecate gradually.
+4. **`proto/rpc/` and `proto/events/` are different in kind:**
+   - `rpc/` = *"I'm asking you for this"* → verb names (`GetOrder`, `ReserveStock`)
+   - `events/` = *"this already happened"* → past-tense names (`OrderPlaced`, `StockReserved`)
+5. Generate with `make proto` and **commit the output**. Reason: a fresh clone builds immediately, without installing `buf`.
 
 ---
 
-## 5. Quy tắc giao tiếp: gRPC hay Kafka
+## 5. Communication rule: gRPC or Kafka
 
-Đây là quyết định bị làm sai nhiều nhất trong microservices. Quy tắc một dòng:
+This is the decision most often got wrong in microservices. The one-line rule:
 
-> **Cần câu trả lời để đi tiếp → gRPC. Chỉ thông báo việc đã xảy ra → Kafka.**
+> **Need an answer before you can continue → gRPC. Only announcing that something happened → Kafka.**
 
-| Tình huống | Cách | Vì sao |
+| Situation | Choice | Why |
 |---|---|---|
-| Gateway → mọi service | **gRPC** | Client đang chờ response |
-| Order → Inventory: giữ hàng | **gRPC** | Phải biết còn hàng hay không mới tạo được đơn |
-| Order → Payment: trừ tiền | **Kafka** (saga) | Có thể mất vài giây; không được block người dùng |
-| Order → Search: cập nhật index | **Kafka** | Search chậm 2 giây cũng không sao |
-| Order → Recommendation: ghi nhận hành vi | **Kafka** | Fire-and-forget |
-| Clickstream → mọi nơi | **Kafka** | Volume cao, nhiều consumer |
-| Mọi thứ → Stream processor | **Kafka** | Bản chất của streaming |
+| Gateway → any service | **gRPC** | A client is waiting on the response |
+| Order → Inventory: reserve stock | **gRPC** | You can't create the order without knowing stock is available |
+| Order → Payment: charge | **Kafka** (saga) | May take seconds; must not block the user |
+| Order → Search: reindex | **Kafka** | Search being two seconds stale is fine |
+| Order → Recommendation: record behaviour | **Kafka** | Fire-and-forget |
+| Clickstream → everywhere | **Kafka** | High volume, many consumers |
+| Everything → Stream processor | **Kafka** | That is what streaming is |
 
-### Sơ đồ
+### Diagram
 
 ```
                     ┌──────────────┐
-   Browser ────────▶│ api-gateway  │ [C# + YARP]  BFF, auth, rate limit
+   Browser ────────▶│ api-gateway  │ [C# + YARP]  BFF, auth, rate limiting
                     └──────┬───────┘
           ┌────────────────┼────────────────┬──────────────────┐
           │ gRPC           │ gRPC           │ gRPC             │ gRPC
@@ -453,31 +454,31 @@ plugins:
 
 ---
 
-## 6. Trải nghiệm dev local
+## 6. Local development experience
 
-Mục tiêu: **`git clone` → `make up` → hệ thống chạy.** Không có bước thứ ba.
+The goal: **`git clone` → `make up` → it runs.** There is no third step.
 
-### Makefile là API của repo
+### The Makefile is the repo's API
 
 ```makefile
-.PHONY: up down proto test lint
+.PHONY: up infra down proto proto-check test arch lint
 
-up:            ## Khởi động toàn bộ hệ thống
+up:            ## Start the whole system
 	docker compose -f compose.infra.yml -f compose.services.yml up -d --build
 
-infra:         ## Chỉ hạ tầng — dùng khi debug 1 service từ IDE
+infra:         ## Infrastructure only — for debugging a single service from the IDE
 	docker compose -f compose.infra.yml up -d
 
 down:
 	docker compose -f compose.infra.yml -f compose.services.yml down -v
 
-proto:         ## Sinh lại toàn bộ stub từ proto/
+proto:         ## Regenerate every stub from proto/
 	cd proto && buf lint && buf generate
 
-proto-check:   ## Kiểm tra breaking change so với main
+proto-check:   ## Detect breaking changes against main
 	cd proto && buf breaking --against '.git#branch=main'
 
-test:          ## Chạy test của cả 4 ngôn ngữ
+test:          ## Run tests across all four languages
 	dotnet test services/order-service
 	dotnet test services/api-gateway
 	cd services/search-service && go test ./...
@@ -485,126 +486,126 @@ test:          ## Chạy test của cả 4 ngôn ngữ
 	cd services/recommendation-service && pytest
 	cd services/stream-processor && mvn test
 
-arch:          ## Architecture test — ép ranh giới service/tầng
+arch:          ## Architecture tests — enforce service and layer boundaries
 	dotnet test tests/arch/dotnet
 	cd tests/arch/go && go-arch-lint check
 	cd tests/arch/python && lint-imports
 
-lint:          ## Lint toàn repo
+lint:          ## Lint the whole repo
 	cd proto && buf lint
 	cd services/search-service && golangci-lint run
 	cd services/inventory-service && golangci-lint run
 	cd services/recommendation-service && ruff check .
 ```
 
-### Tách compose làm hai
+### Split compose into two files
 
-| File | Nội dung | Vòng đời |
+| File | Contents | Lifecycle |
 |---|---|---|
-| `compose.infra.yml` | Kafka, Schema Registry, Postgres ×3, Redis, OpenSearch, MinIO, OTel Collector, Grafana | Chạy 1 lần buổi sáng, để nguyên cả ngày |
-| `compose.services.yml` | 7 service của bạn (3 C#, 2 Go, 1 Python, 1 Java) | Restart liên tục khi code |
+| `compose.infra.yml` | Kafka, Schema Registry, Postgres, Redis, OpenSearch, MinIO, OTel Collector, Grafana | Started once in the morning, left alone all day |
+| `compose.services.yml` | Your 7 services (3 C#, 2 Go, 1 Python, 1 Java) | Restarted constantly while coding |
 
-> Nếu để chung một file, mỗi lần sửa code Go bạn lại phải chờ Kafka khởi động lại. Sau tuần thứ hai bạn sẽ ghét dự án của chính mình.
+> Keep them in one file and every Go edit means waiting for Kafka to boot again. By week two you will resent your own project.
 
-### Bắt buộc có
+### Non-negotiable
 
-- [ ] **Healthcheck** cho mọi container + `depends_on: condition: service_healthy`
-- [ ] Seed data script — không có dữ liệu thì không demo được gì
-- [ ] `.env.example` đầy đủ, `make up` không cần sửa gì cũng chạy
+- [ ] **Healthchecks** on every container + `depends_on: condition: service_healthy`
+- [ ] A seed-data script — with no data there is nothing to demo
+- [ ] A complete `.env.example`; `make up` works with zero edits
 
 ---
 
-## 7. Observability xuyên ngôn ngữ
+## 7. Cross-language observability
 
-**Đây là phần khoe được nhiều nhất mà tốn ít công nhất.** Một trace đi từ **C# gateway → Go → C# → Kafka → Python** và hiện thành **một đường liền mạch** trong Grafana Tempo là hình ảnh thuyết phục hơn bất kỳ đoạn code nào.
+**This is the highest-visibility work for the least effort in the whole project.** A single trace running **C# gateway → Go → C# → Kafka → Python** and rendering as **one unbroken line** in Grafana Tempo is more persuasive than any code sample.
 
-| Thành phần | Cách làm |
+| Concern | Approach |
 |---|---|
-| Instrumentation | OpenTelemetry SDK cho .NET, Go, Python, Java — **không dùng thư viện tracing riêng của từng ngôn ngữ** |
-| Propagation | W3C `traceparent` header cho gRPC; **Kafka message header** cho async |
-| Collector | 1 OTel Collector trong `compose.infra.yml`, mọi service export vào đó |
-| Backend | Tempo (trace) + Prometheus (metric) + Loki (log) + Grafana |
-| Correlation | Mọi log **phải** có `trace_id` — đây là điều kiện để nối log với trace |
-| **Trace origin** | **`api-gateway` là nơi sinh `traceparent` đầu tiên.** Mọi span khác là con cháu của span gateway. Vì gateway giờ là .NET, bạn dùng `ActivitySource` + `AddAspNetCoreInstrumentation()` — cùng cơ chế với order-service, không phải học thêm SDK thứ hai. |
+| Instrumentation | OpenTelemetry SDK for .NET, Go, Python and Java — **never a language-specific tracing library** |
+| Propagation | W3C `traceparent` header for gRPC; **Kafka message headers** for async |
+| Collector | One OTel Collector in `compose.infra.yml`; every service exports to it |
+| Backend | Tempo (traces) + Prometheus (metrics) + Loki (logs) + Grafana |
+| Correlation | Every log line **must** carry `trace_id` — that's the join key between logs and traces |
+| **Trace origin** | **`api-gateway` mints the first `traceparent`.** Every other span descends from the gateway span. Since the gateway is .NET, you use `ActivitySource` + `AddAspNetCoreInstrumentation()` — the same mechanism as order-service, not a second SDK to learn. |
 
-> **Điểm khó — và cũng là điểm đáng khoe:** truyền trace context qua Kafka không tự động. Bạn phải tự inject vào header ở producer và extract ở consumer, ở **cả 4 ngôn ngữ**. Làm được thì viết `docs/09-architecture-decisions/00X-distributed-tracing.md`.
+> **The hard part — and the part worth showing off:** trace context does not cross Kafka automatically. You inject it into headers in the producer and extract it in the consumer, in **all four languages**. Once it works, write `docs/09-architecture-decisions/00X-distributed-tracing.md`.
 
 ---
 
-## 8. Lộ trình 6 tháng
+## 8. Six-month roadmap
 
-### Tháng 0.5 — Walking skeleton *(2 tuần)*
+### Month 0.5 — Walking skeleton *(2 weeks)*
 
-> **Mục tiêu:** một request đi từ browser → gateway → 1 service → DB, và thấy được trace.
+> **Goal:** one request travelling browser → gateway → one service → DB, with a visible trace.
 
-- [ ] Khung repo theo cấu trúc mục 2
-- [ ] **`mise.toml`** pin .NET / Go / Python / Java / buf — *làm ngay ngày đầu, không để sau*
-- [ ] Khởi tạo `docs/` theo khung arc42 (12 file rỗng có tiêu đề — điền dần)
-- [ ] **`.agents/skills/` + `CLAUDE.md` + `AGENTS.md`** — xem [mục 15](#15-agent-skills--ghim-hướng-dẫn-ai-vào-repo).
-      Viết `proto-contract` và `ddd-dotnet` ngay tuần đầu; các skill còn lại thêm khi ngôn ngữ tương ứng xuất hiện.
-- [ ] `proto/rpc/order/v1/order_service.proto` — 1 RPC duy nhất `GetOrder`
-- [ ] `make proto` sinh stub cho C# + Go
-- [ ] `order-service` (C#) trả về dữ liệu hard-code
-- [ ] `api-gateway` (C# + YARP) expose REST `/api/orders/{id}` → gọi gRPC client tới order-service
+- [ ] Repo skeleton per section 2
+- [ ] **`mise.toml`** pinning .NET / Go / Python / Java / buf — *day one, not later*
+- [ ] Scaffold `docs/` on the arc42 skeleton (12 empty files with headings — fill in over time)
+- [ ] **`.agents/skills/` + `CLAUDE.md` + `AGENTS.md`** — see [section 15](#15-agent-skills--pinning-ai-guidance-into-the-repo).
+      Write `proto-contract` and `ddd-dotnet` in week one; add the rest as each language appears.
+- [ ] `proto/rpc/order/v1/order_service.proto` — a single `GetOrder` RPC
+- [ ] `make proto` generates stubs for C# and Go
+- [ ] `order-service` (C#) returning hard-coded data
+- [ ] `api-gateway` (C# + YARP) exposing REST `/api/orders/{id}` → gRPC client call to order-service
 - [ ] `compose.infra.yml` + `compose.services.yml` + `Makefile`
-- [ ] OTel Collector + Grafana Tempo — **thấy trace 2 chặng**
-- [ ] CI: build cả 2 service + `buf lint`
+- [ ] OTel Collector + Grafana Tempo — **a visible two-hop trace**
+- [ ] CI: build both services + `buf lint`
 
-**Tiêu chí xong:** `make up && curl localhost:8080/api/orders/1` → có kết quả, và trace hiện đủ 2 span.
+**Done when:** `make up && curl localhost:8080/api/orders/1` returns a result, and the trace shows both spans.
 
 ---
 
-### Tháng 1 — Core domain (C#)
+### Month 1 — Core domain (C#)
 
-- [ ] **order-service** đầy đủ:
-  - [ ] `Domain/` — `Order` aggregate, `OrderItem`, `Address` value object, domain event
-  - [ ] `Application/` — MediatR + pipeline `Logging → Validation → Transaction`
-  - [ ] `Infrastructure/` — EF Core, Postgres, migration
+- [ ] **order-service**, complete:
+  - [ ] `Domain/` — `Order` aggregate, `OrderItem`, `Address` value object, domain events
+  - [ ] `Application/` — MediatR + `Logging → Validation → Transaction` pipeline
+  - [ ] `Infrastructure/` — EF Core, Postgres, migrations
   - [ ] Idempotency: `IdentifiedCommand` + `RequestManager`
-- [ ] **payment-service** (C#) — tối giản, chỉ đủ làm saga participant
-- [ ] Unit test domain **không mock DB**
-- [ ] Integration test bằng **Testcontainers**
+- [ ] **payment-service** (C#) — minimal, just enough to act as a saga participant
+- [ ] Domain unit tests **with no DB mocking**
+- [ ] Integration tests via **Testcontainers**
 
-#### ★ Architecture tests — bắt đầu từ tháng 1, không để cuối
+#### ★ Architecture tests — start in month 1, not at the end
 
-> Đây là thứ biến *"tôi theo DDD"* thành *"vi phạm DDD thì build đỏ"*. Với repo polyglot, nó còn quan trọng hơn — ranh giới giữa 4 ngôn ngữ là chỗ dễ vỡ nhất và khó phát hiện nhất.
+> This is what turns *"I follow DDD"* into *"violating DDD turns the build red"*. In a polyglot repo it matters even more — the boundaries between four languages are the easiest to break and the hardest to notice.
 
-| Ngôn ngữ | Công cụ | Luật ép ngay từ tháng 1 |
+| Language | Tool | Rules to enforce from month 1 |
 |---|---|---|
-| C# | `NetArchTest` / `ArchUnitNET` | `Domain/` không được tham chiếu `Infrastructure/` hay `building-blocks/`<br>Aggregate phải kế thừa `Entity`<br>Domain event phải là `record`, immutable<br>Command handler phải nằm trong `Application/` |
-| Go | `go-arch-lint` | `internal/handler` không được import `internal/repository` trực tiếp<br>Không package nào import `gen/csharp` |
-| Python | `import-linter` | `app/models` không được import `app/consumers` |
-| **Mọi ngôn ngữ** | test tự viết | **Không service nào import `gen/` của ngôn ngữ khác**<br>**Không service nào tham chiếu package của service khác** |
+| C# | `NetArchTest` / `ArchUnitNET` | `Domain/` must not reference `Infrastructure/` or `building-blocks/`<br>Aggregates must inherit `Entity`<br>Domain events must be immutable `record`s<br>Command handlers must live in `Application/` |
+| Go | `go-arch-lint` | `internal/handler` must not import `internal/repository` directly<br>No package may import `gen/csharp` |
+| Python | `import-linter` | `app/models` must not import `app/consumers` |
+| **All languages** | hand-written tests | **No service may import another language's `gen/`**<br>**No service may reference another service's packages** |
 
-- [ ] `tests/arch/dotnet` — tối thiểu 8 luật, chạy trong CI
-- [ ] `tests/arch/go` + `tests/arch/python` — thêm khi service tương ứng ra đời (tháng 2, 3)
-- [ ] Luật quan trọng nhất: **cyclic dependency test** — phát hiện distributed monolith từ sớm
+- [ ] `tests/arch/dotnet` — at least 8 rules, running in CI
+- [ ] `tests/arch/go` and `tests/arch/python` — added as those services appear (months 2 and 3)
+- [ ] The single most valuable rule: a **cyclic dependency test** — catches a distributed monolith early
 
 ---
 
-### Tháng 2 — Go services + event backbone ★
+### Month 2 — Go services + event backbone ★
 
-> Tháng biến project từ "vài API" thành hệ thống event-driven.
+> The month the project stops being "some APIs" and becomes an event-driven system.
 
 - [ ] **search-service** (Go)
-  - [ ] gRPC handler + OpenSearch client
-  - [ ] Kafka consumer → cập nhật index
-  - [ ] Đo p99 latency, đặt mục tiêu < 50ms
-- [ ] **inventory-service** (Go) — reserve/release stock, xử lý concurrency
-- [ ] **Outbox pattern** trong order-service
-- [ ] **Debezium** đọc Postgres WAL → Kafka *(hoặc publisher thường ở giai đoạn 1)*
-- [ ] `proto/events/` + Protobuf serialization qua Schema Registry
+  - [ ] gRPC handlers + OpenSearch client
+  - [ ] Kafka consumer → index updates
+  - [ ] Measure p99 latency; target < 50 ms
+- [ ] **inventory-service** (Go) — reserve/release stock, handle contention
+- [ ] **Outbox pattern** in order-service
+- [ ] **Debezium** reading the Postgres WAL → Kafka *(a plain publisher is acceptable as a first step)*
+- [ ] `proto/events/` + Protobuf serialization through Schema Registry
 - [ ] **Partition key design** → `docs/08-cross-cutting-concepts/partition-strategy.md`
-- [ ] DLQ + retry topic có backoff
-- [ ] `building-blocks/go/` — otel middleware, kafka wrapper dùng chung
+- [ ] DLQ + retry topic with exponential backoff
+- [ ] `building-blocks/chassis-go/` — shared otel middleware and Kafka wrapper
 
-**Tiêu chí xong:** kill order-service giữa lúc publish → restart → không mất, không duplicate.
+**Done when:** killing order-service mid-publish and restarting loses nothing and duplicates nothing.
 
 ---
 
-### Tháng 3 — Saga & Python service
+### Month 3 — Saga & the Python service
 
-- [ ] **Saga đơn hàng** qua Kafka:
+- [ ] **Order saga** over Kafka:
 
   ```
   Created → StockReserved → Paid → Confirmed
@@ -612,86 +613,86 @@ lint:          ## Lint toàn repo
       └─ StockRejected ────────┴─ PaymentFailed ──→ Cancelled
   ```
 
-- [ ] Chọn **orchestration** (state machine trong order-service), không choreography
+- [ ] Choose **orchestration** (a state machine inside order-service) over choreography
       → `docs/09-architecture-decisions/00X-saga-orchestration.md`
-- [ ] Stuck-saga detection + timeout
+- [ ] Stuck-saga detection + timeouts
 - [ ] **recommendation-service** (Python)
   - [ ] gRPC server (grpcio)
-  - [ ] Embedding sản phẩm bằng `sentence-transformers` → pgvector
+  - [ ] Product embeddings via `sentence-transformers` → pgvector
   - [ ] `GetSimilarProducts` + `GetRecommendationsForUser`
-  - [ ] Kafka consumer cập nhật hành vi người dùng
-- [ ] **E2E test** qua gateway: đặt hàng → kiểm tra trạng thái cuối
+  - [ ] Kafka consumer updating user behaviour features
+- [ ] **E2E test** through the gateway: place an order → assert the final state
 
 ---
 
-### Tháng 4 — Tầng Flink (Java) ★
+### Month 4 — The Flink layer (Java) ★
 
-> Tháng quyết định giá trị portfolio với vị trí Data Engineer.
+> The month that decides this portfolio's value for a Data Engineer role.
 
-Ba job, mỗi job dạy một khái niệm khác nhau:
+Three jobs, each teaching a different concept:
 
-| # | Job | Khái niệm |
+| # | Job | Concept |
 |---|---|---|
-| 1 | `revenue-rollup` | Tumbling window, watermark, event time |
-| 2 | `fraud-detection` | Keyed state, timer, CEP |
-| 3 | `sessionization` | Session window, late data, side output |
+| 1 | `revenue-rollup` | Tumbling windows, watermarks, event time |
+| 2 | `fraud-detection` | Keyed state, timers, CEP |
+| 3 | `sessionization` | Session windows, late data, side outputs |
 
-Phải làm được **và giải thích được**:
+You must be able to do **and explain**:
 
-- [ ] Watermark strategy — bounded out-of-orderness đặt bao nhiêu, vì sao
+- [ ] Watermark strategy — what bounded out-of-orderness you chose, and why
 - [ ] Checkpointing — interval, aligned vs unaligned, RocksDB state backend
-- [ ] **Exactly-once** — Kafka source + transactional sink (2PC)
-      → *chứng minh:* kill TaskManager giữa chừng, count không đổi
-- [ ] **Savepoint & rescale** — dừng job, tăng parallelism, restore
-- [ ] Ít nhất 1 job viết bằng **Flink SQL**
+- [ ] **Exactly-once** — Kafka source + transactional sink (two-phase commit)
+      → *prove it:* kill a TaskManager mid-run, the count is unchanged
+- [ ] **Savepoints & rescaling** — stop the job, raise parallelism, restore
+- [ ] At least one job written in **Flink SQL**
 
-> Mỗi job kèm `README.md` giải thích quyết định thiết kế. Đây là kịch bản trả lời phỏng vấn.
-
----
-
-### Tháng 5 — Serving layer & hoàn thiện
-
-- [ ] **ClickHouse** — Flink ghi vào, phục vụ dashboard
-- [ ] **Iceberg trên MinIO** — lakehouse layer, so sánh hot vs cold query
-- [ ] Dashboard real-time (Grafana hoặc một web app nhỏ)
-- [ ] **Trace xuyên suốt hoàn chỉnh**: browser → Go → C# → Kafka → Java → ClickHouse
-- [ ] Metric: consumer lag, checkpoint duration, backpressure, gRPC p99 mỗi service
-- [ ] Data quality: null check, schema drift, late-arrival rate
+> Every job ships with a `README.md` explaining its design decisions. This is your interview script.
 
 ---
 
-### Tháng 6 — Hardening & trình bày
+### Month 5 — Serving layer & completion
 
-- [ ] **Chaos test** → `docs/failure-modes.md`
-  - kill broker · kill TaskManager · network partition · service chết giữa saga
-- [ ] **Load test** — k6 qua gateway, 10k rps, đo p99 từng chặng
-- [ ] Backfill/replay — reset consumer group, replay 30 ngày
-- [ ] Deploy lên **kind** (K8s local) — Helm chart hoặc kustomize
-- [ ] **12–15 ADR** trong `docs/09-architecture-decisions/`
-- [ ] `docs/runbook.md` — "service X chết thì làm gì"
-- [ ] Hoàn thiện 12 chương arc42 — đặc biệt **10-quality-requirements** và **11-risks-and-technical-debt**
-
-#### ★ Đóng gói — 2 ngày công, nhưng quyết định repo có được đọc hay không
-
-> Người xem GitHub quyết định trong **30 giây** có mở code của bạn hay không. Toàn bộ 6 tháng làm việc phụ thuộc vào 30 giây đó.
-
-- [ ] **Sơ đồ kiến trúc dạng ảnh** trong README — không phải ASCII art, mà PNG/SVG vẽ bằng Excalidraw hoặc Structurizr
-- [ ] **Screenshot** dashboard real-time + Grafana trace 4 ngôn ngữ + Flink UI
-- [ ] **GIF demo** — `make up` → đặt hàng → thấy số liệu chạy trên dashboard
-- [ ] **Badge**: CI status, coverage, license, .NET/Go/Python version
-- [ ] **GitHub Pages** publish `docs/` (MkDocs hoặc Docusaurus — MkDocs Material đủ và nhanh hơn)
-- [ ] README rút gọn: mục tiêu → sơ đồ → bảng service/ngôn ngữ → "chạy trong 2 lệnh" → link docs site
-- [ ] **CI bảo mật**: CodeQL + Trivy + Dependabot *(gần như chỉ copy YAML, signal tốt cho vị trí platform)*
-- [ ] Test lại `git clone && mise install && make up` trên **máy sạch**
+- [ ] **ClickHouse** — written to by Flink, serving the dashboard
+- [ ] **Iceberg on MinIO** — the lakehouse layer; compare hot vs cold queries
+- [ ] Real-time dashboard (Grafana or a small web app)
+- [ ] **Complete end-to-end trace**: browser → C# → Go → Kafka → Java → ClickHouse
+- [ ] Metrics: consumer lag, checkpoint duration, backpressure, per-service gRPC p99
+- [ ] Data quality: null checks, schema drift, late-arrival rate
 
 ---
 
-## 9. CI/CD cho monorepo đa ngôn ngữ
+### Month 6 — Hardening & presentation
 
-Vấn đề cốt lõi: **đừng build lại tất cả khi chỉ sửa một service.**
+- [ ] **Chaos testing** → `docs/failure-modes.md`
+  - kill a broker · kill a TaskManager · network partition · a service dying mid-saga
+- [ ] **Load testing** — k6 through the gateway, 10k rps, p99 measured per hop
+- [ ] Backfill/replay — reset a consumer group, replay 30 days, reconcile the results
+- [ ] Deploy to **kind** (local K8s) — Helm chart or kustomize
+- [ ] **12–15 ADRs** in `docs/09-architecture-decisions/`
+- [ ] `docs/runbook.md` — "service X is down, now what"
+- [ ] Complete all 12 arc42 chapters — especially **10-quality-requirements** and **11-risks-and-technical-debt**
+
+#### ★ Packaging — two days of work that decide whether the repo gets read at all
+
+> A visitor decides in **30 seconds** whether to open your code. Six months of work hangs on those 30 seconds.
+
+- [ ] **An architecture diagram as an image** in the README — not ASCII art; PNG/SVG from Excalidraw or Structurizr
+- [ ] **Screenshots** of the real-time dashboard, the four-language Grafana trace, and the Flink UI
+- [ ] **A demo GIF** — `make up` → place an order → watch the numbers move on the dashboard
+- [ ] **Badges**: CI status, coverage, license, .NET/Go/Python versions
+- [ ] **GitHub Pages** publishing `docs/` (MkDocs Material is enough and faster than Docusaurus)
+- [ ] A tightened README: goal → diagram → service/language table → "run it in two commands" → link to the docs site
+- [ ] **Security CI**: CodeQL + Trivy + Dependabot *(nearly copy-paste YAML, strong signal for platform roles)*
+- [ ] Re-verify `git clone && mise install && make up` on a **clean machine**
+
+---
+
+## 9. CI/CD for a polyglot monorepo
+
+The core problem: **don't rebuild everything when one service changes.**
 
 ```yaml
-# .github/workflows/ci.yml  (rút gọn)
+# .github/workflows/ci.yml  (abridged)
 jobs:
   changes:
     outputs:
@@ -704,18 +705,18 @@ jobs:
         id: filter
         with:
           filters: |
-            # Gateway giờ là C# → phụ thuộc gen/csharp VÀ building-blocks/dotnet,
-            # giống hệt order-service. Sửa proto = build lại cả hai.
-            order:   ['services/order-service/**',  'building-blocks/gen/csharp/**', 'building-blocks/dotnet/**']
-            gateway: ['services/api-gateway/**',    'building-blocks/gen/csharp/**', 'building-blocks/dotnet/**']
-            search:  ['services/search-service/**', 'building-blocks/gen/go/**',     'building-blocks/go/**']
+            # The gateway is C# now, so it depends on gen/csharp AND chassis-dotnet,
+            # exactly like order-service. A proto change rebuilds both.
+            order:   ['services/order-service/**',  'building-blocks/gen/csharp/**', 'building-blocks/chassis-dotnet/**']
+            gateway: ['services/api-gateway/**',    'building-blocks/gen/csharp/**', 'building-blocks/chassis-dotnet/**']
+            search:  ['services/search-service/**', 'building-blocks/gen/go/**',     'building-blocks/chassis-go/**']
             proto:   ['proto/**']
 
   proto-check:
     if: needs.changes.outputs.proto == 'true'
     steps:
       - run: buf lint
-      - run: buf breaking --against '.git#branch=main'   # ← chặn breaking change
+      - run: buf breaking --against '.git#branch=main'   # ← blocks breaking changes
 
   order-service:
     if: needs.changes.outputs.order == 'true'
@@ -725,277 +726,283 @@ jobs:
     if: needs.changes.outputs.gateway == 'true'
     steps: [dotnet build, dotnet test]
 
-  # ... tương tự cho từng service
+  # ... and so on per service
 ```
 
-> **Hệ quả của việc đổi gateway sang C#:** trước đây sửa `proto/` chỉ rebuild 1 project .NET, giờ rebuild **2** (order + gateway) vì cả hai cùng dùng `building-blocks/gen/csharp/`.
-> CI chậm hơn một chút, nhưng đổi lại **breaking change được phát hiện ở cả hai đầu của contract cùng lúc** — client (gateway) và server (order) vỡ chung một lần, không phải phát hiện muộn ở runtime.
+> **Consequence of moving the gateway to C#:** a `proto/` change used to rebuild one .NET project; now it rebuilds **two** (order and gateway), since both consume `building-blocks/gen/csharp/`.
+> Slightly slower CI, but in exchange **a breaking change fails at both ends of the contract at once** — client (gateway) and server (order) go red together, rather than surfacing later at runtime.
 
-**Ba job bắt buộc phải có:**
+**Three jobs you cannot skip:**
 
-| Job | Chặn cái gì |
+| Job | What it blocks |
 |---|---|
-| `buf breaking` | Sửa proto làm vỡ consumer đang chạy |
-| `gen-is-current` | Sửa `.proto` nhưng quên chạy `make proto` — CI sinh lại và so sánh, khác nhau thì đỏ |
-| `e2e` | Từng service pass nhưng ghép lại thì hỏng |
+| `buf breaking` | A proto change that breaks a running consumer |
+| `gen-is-current` | Editing `.proto` but forgetting `make proto` — CI regenerates and diffs; any difference is red |
+| `e2e` | Every service passing individually while the assembled system is broken |
 
 ---
 
-## 10. Cạm bẫy đã biết
+## 10. Known pitfalls
 
-| # | Cạm bẫy | Cách tránh |
+| # | Pitfall | How to avoid it |
 |---|---|---|
-| 1 | **Chia service quá sớm** | 7 service ở tuần 1 là quá nhiều. Bắt đầu **2** (order + gateway) — giờ cả hai đều C#, nên tháng 0.5 chỉ cần **một** toolchain. Thêm Go ở tháng 2, Python tháng 3, Java tháng 4. |
-| 2 | **Shared database** | Mỗi service một database schema riêng, **không service nào query bảng của service khác**. Vi phạm điều này thì bạn có distributed monolith. |
-| 3 | **`building-blocks` phình to** | Chỉ chứa code *hạ tầng* (otel, kafka, logging). **Không bao giờ** chứa domain logic — nếu 2 service cần chung domain logic thì ranh giới service đang sai. |
-| 4 | **Log 4 kiểu khác nhau** | Thống nhất **structured JSON** + cùng field name (`trace_id`, `service`, `level`) ngay từ tuần 1. Sửa sau rất mệt. |
-| 5 | **Bỏ qua versioning proto** | Đặt `v1/` trong đường dẫn ngay từ đầu, dù chưa cần. |
-| 6 | **Python service chậm** | gRPC Python là bottleneck thật. Dùng `grpcio` với thread pool đủ lớn, cân nhắc `uvloop`. Đo trước khi lo. |
-| 7 | **Không ai chạy được repo** | Test lại `git clone && make up` trên máy sạch mỗi tháng một lần. |
+| 1 | **Splitting services too early** | Seven services in week one is too many. Start with **two** (order + gateway) — both are C# now, so month 0.5 needs only one toolchain. Add Go in month 2, Python in month 3, Java in month 4. |
+| 2 | **A shared database** | Each service owns its own schema, and **no service queries another service's tables**. Break this and you have a distributed monolith. |
+| 3 | **`building-blocks` bloat** | Infrastructure code only (otel, kafka, logging). **Never** domain logic — if two services need the same domain logic, the service boundary is wrong. |
+| 4 | **Four different logging styles** | Standardise on **structured JSON** with identical field names (`trace_id`, `service`, `level`) from week one. Retrofitting is miserable. |
+| 5 | **Skipping proto versioning** | Put `v1/` in the path from the start, even when you don't need it yet. |
+| 6 | **A slow Python service** | Python gRPC really is a bottleneck. Use `grpcio` with a large enough thread pool, consider `uvloop`. Measure before worrying. |
+| 7 | **Nobody else can run the repo** | Re-test `git clone && mise install && make up` on a clean machine once a month. |
 
 ---
 
-## 11. Phạm vi loại trừ
+## 11. Out of scope
 
-| Không làm | Lý do |
+| Not building | Why |
 |---|---|
-| Thanh toán thật (Stripe) | Giả lập đủ; không dạy gì về distributed system |
-| Admin CMS, quản lý user, i18n | Tốn thời gian, không thể hiện năng lực |
-| Mobile app | Không liên quan mục tiêu |
-| Service mesh (Istio/Linkerd) | Độ phức tạp lớn, giá trị học tập thấp so với công sức |
-| Recommendation model phức tạp | Embedding + cosine similarity là đủ ấn tượng |
-| Tự viết service discovery | Docker DNS / K8s Service là đủ |
+| Real payments (Stripe) | Simulation is enough; payment integration teaches nothing about distributed systems |
+| Admin CMS, user management, i18n | Time-consuming, demonstrates nothing |
+| A mobile app | Irrelevant to the goal |
+| Service mesh (Istio/Linkerd) | Large complexity, low learning value for the effort |
+| A sophisticated recommendation model | Embeddings + cosine similarity is already impressive enough |
+| Hand-rolled service discovery | Docker DNS / K8s Services suffice |
 
 ---
 
-## 12. Bản đồ phỏng vấn
+## 12. Interview map
 
-### Vị trí Data Engineer (Streaming)
+### Data Engineer (Streaming)
 
-| Câu hỏi | Trả lời bằng |
+| Question | Answered by |
 |---|---|
-| "Exactly-once trong Flink hoạt động thế nào?" | Job 1 + chaos test kill TaskManager |
-| "Chọn partition key thế nào?" | `docs/08-cross-cutting-concepts/partition-strategy.md` |
-| "Late data xử lý ra sao?" | Job 3 — session window + side output |
-| "Schema thay đổi thì sao?" | `buf breaking` trong CI + Schema Registry |
-| "Consumer lag tăng, bạn làm gì?" | Grafana dashboard + rescale bằng savepoint |
-| "CDC khác gì outbox polling?" | Tháng 2 — đã làm và đo cả hai |
-| "Backpressure là gì?" | Flink UI + metric đã dựng |
+| "How does exactly-once work in Flink?" | Job 1 + the TaskManager-kill chaos test |
+| "How do you choose a partition key?" | `docs/08-cross-cutting-concepts/partition-strategy.md` |
+| "How do you handle late data?" | Job 3 — session windows + side outputs |
+| "What happens when a schema changes?" | `buf breaking` in CI + Schema Registry |
+| "Consumer lag is climbing — what do you do?" | The Grafana dashboard + rescaling from a savepoint |
+| "How is CDC different from outbox polling?" | Month 2 — both were built and measured |
+| "What is backpressure and how do you detect it?" | Flink UI + the metrics already wired up |
+| "Stateful vs stateless processing?" | Jobs 2 and 3 |
+| "What if a saga gets stuck?" | Month 3 — orchestration + stuck-saga detection |
 
-### Vị trí Backend / Platform
+### Backend / Platform
 
-| Câu hỏi | Trả lời bằng |
+| Question | Answered by |
 |---|---|
-| "Chia ranh giới service thế nào?" | `docs/08-cross-cutting-concepts/service-boundaries.md` |
-| "Sao dùng nhiều ngôn ngữ?" | `docs/09-architecture-decisions/001-why-polyglot.md` — kèm thừa nhận trade-off |
-| "gRPC hay REST hay message queue?" | Mục 5 — có quy tắc rõ ràng, không tuỳ hứng |
-| "Distributed transaction thế nào?" | Saga orchestration tháng 3 |
-| "Debug lỗi xuyên 4 service ra sao?" | Distributed tracing tháng 5 |
-| "Deploy độc lập từng service thế nào?" | CI path-filter + versioned proto |
+| "How do you draw service boundaries?" | `docs/08-cross-cutting-concepts/service-boundaries.md` |
+| "Why use several languages?" | `docs/09-architecture-decisions/001-why-polyglot.md` — trade-offs admitted |
+| "gRPC, REST, or a message queue?" | Section 5 — an explicit rule, not a case-by-case guess |
+| "How do you handle distributed transactions?" | The month 3 saga orchestration |
+| "How do you debug a failure across four services?" | The month 5 distributed tracing |
+| "How do you deploy services independently?" | CI path filters + versioned proto |
 
 ---
 
-## 13. Theo dõi tiến độ
+## 13. Progress tracker
 
-| Giai đoạn | Deliverable then chốt | Trạng thái |
+| Phase | Key deliverable | Status |
 |---|---|---|
-| T0.5 — Skeleton | `make up` + trace 2 chặng | ☐ |
-| T1 — Core domain | Order aggregate + Testcontainers test | ☐ |
-| T2 — Go + events ★ | Outbox → Kafka, không mất/duplicate | ☐ |
-| T3 — Saga + Python | E2E đặt hàng thành công qua gateway | ☐ |
-| T4 — Flink ★ | 3 job + chứng minh exactly-once | ☐ |
-| T5 — Serving | Trace liền mạch 4 ngôn ngữ | ☐ |
-| T6 — Hardening | `failure-modes.md` + 15 ADR | ☐ |
-| T6 — Đóng gói | Docs site + screenshot + badge + sơ đồ | ☐ |
+| M0.5 — Skeleton | `make up` + a two-hop trace | ☐ |
+| M1 — Core domain | Order aggregate + Testcontainers tests | ☐ |
+| M2 — Go + events ★ | Outbox → Kafka, nothing lost or duplicated | ☐ |
+| M3 — Saga + Python | A successful end-to-end order through the gateway | ☐ |
+| M4 — Flink ★ | Three jobs + a proof of exactly-once | ☐ |
+| M5 — Serving | An unbroken trace across four languages | ☐ |
+| M6 — Hardening | `failure-modes.md` + 15 ADRs | ☐ |
+| M6 — Packaging | Docs site + screenshots + badges + diagram | ☐ |
 
 ---
 
-## 14. Đối chiếu với BookWorm
+## 14. Comparison with BookWorm
 
-[`foxminchan/BookWorm`](https://github.com/foxminchan/BookWorm) là repo tham chiếu .NET/Aspire được đánh giá cao (⭐ 504). Mục này ghi lại **vì sao dự án này chọn khác** — để 3 tháng nữa bạn không quên lý do.
+[`foxminchan/BookWorm`](https://github.com/foxminchan/BookWorm) is a well-regarded .NET/Aspire reference repo (⭐ 504). This section records **why this project deliberately diverges** — so that three months from now the reasoning is still on record.
 
-### Quy mô thật của BookWorm
+### BookWorm's actual scale
 
 | | |
 |---|---|
-| Thời gian | 7/2024 → nay, **hơn 2 năm** |
-| Commit | **597** — của đúng **một người**; 7 "contributor" còn lại là bot |
-| Quy mô | 3.377 file · 10 service · 2 app Next.js |
-| Ngôn ngữ | **~99% C#** |
+| Timeline | July 2024 → present, **over two years** |
+| Commits | **597** — by exactly **one person**; the other seven "contributors" are bots |
+| Size | 3,377 files · 10 services · 2 Next.js apps |
+| Languages | **~99% C#** |
 
-> ⚠️ Đừng so sánh tiến độ của bạn với repo này. Bạn có 6 tháng, anh ấy có 2 năm. So sánh **cách làm**, không so sánh **khối lượng**.
+> ⚠️ Do not measure your progress against this repo. You have six months; he has had two years. Compare **how it was built**, not **how much**.
 
-### Học gì — đã đưa vào kế hoạch
+### What to take — already folded into this plan
 
-| Học | Đã nằm ở đâu trong tài liệu này |
+| Practice | Where it now lives |
 |---|---|
-| `mise.toml` pin phiên bản toolchain | Mục 2 + tháng 0.5 |
-| Tài liệu theo **arc42** 12 chương | Mục 2 (`docs/`) + tháng 0.5, 6 |
-| **Architecture tests** ép ranh giới | Tháng 1 (mở rộng cho Go + Python ở tháng 2, 3) |
-| **Chassis** có cấu trúc rõ, 10 module | Mục 2 (`building-blocks/chassis-*`) |
-| **Contract test nằm trong từng service** | Mục 2 — không để ở `tests/contract/` ngoài |
-| **Đóng gói**: docs site, screenshot, badge, sơ đồ ảnh | Tháng 6 |
-| CI bảo mật: CodeQL, Trivy, Dependabot | Tháng 6 |
-| **Agent skills ghim trong repo** (`.agents/skills/`) | Mục 15 + tháng 0.5 |
+| `mise.toml` pinning toolchain versions | Section 2 + month 0.5 |
+| Documentation on the **arc42** 12-chapter template | Section 2 (`docs/`) + months 0.5 and 6 |
+| **Architecture tests** enforcing boundaries | Month 1 (extended to Go and Python in months 2–3) |
+| A **chassis** with explicit, named modules | Section 2 (`building-blocks/chassis-*`) |
+| **Contract tests living inside each service** | Section 2 — not in an external `tests/contract/` |
+| **Packaging**: docs site, screenshots, badges, image diagrams | Month 6 |
+| Security CI: CodeQL, Trivy, Dependabot | Month 6 |
+| **Agent skills pinned into the repo** (`.agents/skills/`) | Section 15 + month 0.5 |
 
-### Tránh gì — và vì sao
+### What to avoid — and why
 
-| Anh ấy làm | Ta không làm | Lý do |
+| He does | We don't | Reason |
 |---|---|---|
-| **10 service** | 7, và cứng rắn với mục 11 | 2 năm vs 6 tháng. Thêm service = thêm bề mặt phải bảo trì, không phải thêm điểm cộng. |
-| **Nhồi mọi pattern** — event sourcing + inbox + feature flags + API versioning + CQRS + VSA + saga | Chỉ pattern có lý do trong bối cảnh này, mỗi cái một ADR | Người phỏng vấn giỏi sẽ hỏi *"vì sao event sourcing ở đây?"*. *"Để chứng minh tôi làm được"* là câu trả lời yếu. |
-| **Tầng AI/agent**: MCP, A2A, AG-UI, multi-agent | Bỏ hoàn toàn | Trendy nhưng lệch khỏi vị trí Data Engineer (Streaming). |
-| **2 app Next.js + WCAG 2.1 AA** | 1 dashboard đơn giản | ~2 tháng công để chứng minh kỹ năng không ai hỏi bạn. |
-| **Vertical Slice Architecture** | Giữ layered `Domain/Application/Infrastructure` | VSA hợp CRUD-heavy. Domain của ta có saga + aggregate invariant phức tạp → layered rõ ràng hơn. *Đây là lựa chọn, không phải chân lý — ghi vào ADR.* |
+| **10 services** | 7, and we hold section 11 firmly | Two years vs six months. Another service is more surface to maintain, not more credit. |
+| **Every pattern at once** — event sourcing + inbox + feature flags + API versioning + CQRS + VSA + saga | Only patterns with a reason in *this* context, each with an ADR | A sharp interviewer will ask *"why event sourcing here?"*. *"To show I can"* is a weak answer. |
+| **An AI/agent layer**: MCP, A2A, AG-UI, multi-agent | Cut entirely | Fashionable, but orthogonal to Data Engineer (Streaming). |
+| **Two Next.js apps + WCAG 2.1 AA** | One simple dashboard | Roughly two months of work to demonstrate a skill nobody will ask you about. |
+| **Vertical Slice Architecture** | Keep layered `Domain/Application/Infrastructure` | VSA suits CRUD-heavy domains. Ours has saga orchestration and non-trivial aggregate invariants, where layering reads more clearly. *This is a choice, not a law — write the ADR.* |
 
-### Điều BookWorm **không** dạy được — và đó là chỗ ta khác biệt
+### What BookWorm cannot teach you — and where you differentiate
 
-BookWorm dùng Kafka **như một hàng đợi tin nhắn**. Không có:
+BookWorm uses Kafka **as a message queue**. It has none of:
 
-- ❌ Partition strategy có chủ đích · ❌ Consumer lag monitoring · ❌ Replay từ offset
+- ❌ Deliberate partition strategy · ❌ Consumer lag monitoring · ❌ Replay from offset
 - ❌ Schema Registry / schema evolution · ❌ CDC / Debezium
-- ❌ Stream processing (Flink, windowing, watermark, keyed state) · ❌ Exactly-once semantics
-- ❌ Serving layer / lakehouse
+- ❌ Stream processing (Flink, windowing, watermarks, keyed state) · ❌ Exactly-once semantics
+- ❌ A serving layer or lakehouse
 
-Toàn bộ **tháng 2 và tháng 4** của kế hoạch này là vùng trắng trong repo của anh ấy. Với vị trí Data Engineer (Streaming), BookWorm gần như **không dùng được làm mẫu kỹ thuật** — nhưng dùng được làm **mẫu về cách làm và cách trình bày**.
+**Months 2 and 4 of this plan are blank space in his repo.** For a Data Engineer (Streaming) role, BookWorm is nearly useless as a *technical* template — but it is an excellent template for *how to build and present* a project.
 
-> **Nguyên tắc rút ra: học *cách* anh ấy làm, đừng học *cái* anh ấy làm.**
+> **The takeaway: learn *how* he built it, not *what* he built.**
 
 ---
 
-## 15. Agent skills — ghim hướng dẫn AI vào repo
+## 15. Agent skills — pinning AI guidance into the repo
 
-> **Vì sao mục này quan trọng với bạn hơn với BookWorm:** repo của anh ấy ~99% C#, một bộ convention. Repo của bạn có **4 ngôn ngữ, 4 bộ convention**. Không ghim hướng dẫn vào repo, AI sẽ viết Go theo kiểu C#, viết Flink job theo tư duy batch, và đặt tên Kafka topic tuỳ hứng mỗi lần.
+> **Why this matters more here than in BookWorm:** his repo is ~99% C#, one set of conventions. Yours has **four languages and four sets of conventions**. Without guidance pinned into the repo, an AI agent will write Go as if it were C#, write Flink jobs with batch thinking, and invent a new Kafka topic naming scheme every time.
 
-### Agent skill là gì
+### What an agent skill is
 
-Một thư mục chứa `SKILL.md` — YAML frontmatter + hướng dẫn — mà AI coding agent (Claude Code, Copilot, Cursor) tự nạp khi gặp task liên quan. Đây **không phải code chạy**, và không liên quan gì đến tính năng AI trong sản phẩm (mà ta đã loại khỏi phạm vi ở mục 11).
+A directory containing a `SKILL.md` — YAML frontmatter plus instructions — that AI coding agents (Claude Code, Copilot, Cursor) load automatically when a relevant task appears. It is **not runtime code**, and has nothing to do with AI product features (which section 11 puts out of scope).
 
 ```
 .agents/skills/kafka-conventions/
-├── SKILL.md              # ngắn — nạp khi trigger
-└── references/           # dài — chỉ nạp khi thật sự cần
+├── SKILL.md              # short — loaded on trigger
+└── references/           # long — loaded only when actually needed
     ├── topic-naming.md
     └── partition-keys.md
 ```
 
-**Hai kỹ thuật quyết định skill có dùng được hay không:**
+**Two techniques decide whether a skill is usable:**
 
-| Kỹ thuật | Vì sao cần |
+| Technique | Why it's needed |
 |---|---|
-| `USE FOR` / `DO NOT USE FOR` trong `description` | Agent đọc description để **chọn** skill. Có 7 skill mà không ghi rõ khi nào *không* dùng → agent chọn nhầm liên tục. |
-| **Progressive disclosure** — `SKILL.md` ngắn, `references/` tải theo nhu cầu | Nhồi hết vào `SKILL.md` thì tốn context mỗi lần trigger, kể cả khi chỉ cần 1/10 nội dung. |
+| `USE FOR` / `DO NOT USE FOR` in the `description` | The agent reads the description to **choose** a skill. With seven skills and no explicit "when not to use this", it will keep picking the wrong one. |
+| **Progressive disclosure** — short `SKILL.md`, `references/` loaded on demand | Cramming everything into `SKILL.md` burns context on every trigger, even when only a tenth of it is relevant. |
 
-### Skill cần **tự viết** — xếp theo thứ tự làm
+### Skills to **author** — in the order you'll need them
 
-| # | Skill | Viết khi | Nội dung bắt buộc |
+| # | Skill | Write it | Must contain |
 |---|---|---|---|
-| 1 | **`proto-contract`** | Tuần 1 | Quy trình sửa `.proto`: `buf lint` → `buf breaking` → `make proto` → commit `gen/`. **Cấm sửa tay file trong `gen/`.** Version trong path (`v1/`). `rpc/` đặt tên động từ, `events/` đặt tên quá khứ. |
-| 2 | **`ddd-dotnet`** | Tuần 1 | `Domain/` không tham chiếu `Infrastructure/` hay `building-blocks/`. Aggregate kế thừa `Entity`. Domain event là `record` immutable. Command handler nằm ở `Application/`. Đối chiếu với `tests/arch/` — skill và arch test phải nói **cùng một luật**. |
-| 3 | **`kafka-conventions`** | Tháng 2 | Đặt tên topic, chọn partition key, bắt buộc DLQ + retry topic, inject trace context vào header, commit offset **sau** khi xử lý, consumer phải idempotent. |
-| 4 | **`go-service`** | Tháng 2 | `cmd/server/main.go`, không `main.go` ở gốc. `internal/handler` không import thẳng `internal/repository`. Error wrapping, context propagation, structured log cùng field name với .NET. |
-| 5 | **`flink-job`** | Tháng 4 | Mọi job **phải** khai báo watermark strategy và giải thích con số. Cấu hình checkpoint rõ ràng. Late data: side output hay drop — phải chọn có ý thức. Mỗi job một `README.md` giải thích thiết kế. |
-| 6 | **`arc42-docs`** | Tháng 1 | Tài liệu mới thuộc chương nào. ADR vào `09-`, chuyên đề vào `08-`. Format ADR: Context / Decision / Consequences / Alternatives considered. |
+| 1 | **`proto-contract`** | Week 1 | The workflow for changing `.proto`: `buf lint` → `buf breaking` → `make proto` → commit `gen/`. **Never hand-edit anything under `gen/`.** Version in the path (`v1/`). `rpc/` takes verb names; `events/` takes past-tense names. |
+| 2 | **`ddd-dotnet`** | Week 1 | `Domain/` must not reference `Infrastructure/` or `building-blocks/`. Aggregates inherit `Entity`. Domain events are immutable `record`s. Command handlers live in `Application/`. Cross-check against `tests/arch/` — the skill and the architecture test must state **the same rule**. |
+| 3 | **`kafka-conventions`** | Month 2 | Topic naming, partition key selection, mandatory DLQ + retry topic, trace context in headers, commit offsets **after** processing, idempotent consumers. |
+| 4 | **`go-service`** | Month 2 | `cmd/server/main.go`, no root `main.go`. `internal/handler` must not import `internal/repository` directly. Error wrapping, context propagation, structured logs using the same field names as .NET. |
+| 5 | **`flink-job`** | Month 4 | Every job **must** declare a watermark strategy and justify the number. Explicit checkpoint configuration. Late data: side output or drop — a conscious choice. Every job ships a `README.md` explaining its design. |
+| 6 | **`arc42-docs`** | Month 1 | Which chapter new documentation belongs to. ADRs go to `09-`, topic papers to `08-`. ADR format: Context / Decision / Consequences / Alternatives considered. |
 
-### Skill nên **vendor** (không tự viết)
+### Skills to **vendor** rather than write
 
-| Skill | Nguồn | Dùng cho |
+| Skill | Source | Use when |
 |---|---|---|
-| `aspire`, `aspireify`, `aspire-orchestration` | Microsoft | Nếu bạn dùng Aspire cho tầng .NET |
-| `csharp-tunit` hoặc `csharp-xunit` | cộng đồng | Convention viết test C# |
-| `vercel-react-best-practices` | Vercel | **Chỉ khi** làm dashboard bằng Next.js — nếu dùng Blazor thì bỏ |
-| `catalog-documentation-creator` | EventCatalog | Nếu sau này publish event catalog dạng site |
+| `aspire`, `aspireify`, `aspire-orchestration` | Microsoft | If you use Aspire for the .NET tier |
+| `csharp-tunit` or `csharp-xunit` | community | C# test conventions |
+| `vercel-react-best-practices` | Vercel | **Only if** the dashboard is Next.js — skip it for Blazor |
+| `catalog-documentation-creator` | EventCatalog | If you later publish the event catalog as a site |
 
-> **Vendor là copy vào repo, không phải cài global.** Mục đích chính là **mọi người (và mọi máy) đều có AI hành xử giống nhau** — kể cả bạn của 3 tháng sau.
+> **Vendoring means copying into the repo, not installing globally.** The point is that **everyone — and every machine — gets an AI that behaves the same way**, including you three months from now.
 
-### Mẫu `SKILL.md` — dùng luôn cho `kafka-conventions`
+### `SKILL.md` template — usable as-is for `kafka-conventions`
 
 ```markdown
 ---
 name: kafka-conventions
 description: >-
-  Quy tắc bắt buộc khi làm việc với Kafka trong repo này — đặt tên topic,
-  chọn partition key, DLQ, idempotent consumer, trace context.
-  USE FOR: tạo topic mới, viết producer/consumer, thêm integration event,
-  sửa file trong proto/events/, cấu hình consumer group, xử lý retry.
-  DO NOT USE FOR: Flink job (dùng flink-job), thay đổi schema proto
-  (dùng proto-contract), gRPC request/response (dùng proto-contract).
+  Mandatory rules for working with Kafka in this repo — topic naming,
+  partition key selection, DLQ, idempotent consumers, trace context.
+  USE FOR: creating a topic, writing a producer/consumer, adding an integration
+  event, editing files under proto/events/, configuring a consumer group, retries.
+  DO NOT USE FOR: Flink jobs (use flink-job), proto schema changes
+  (use proto-contract), gRPC request/response (use proto-contract).
 metadata:
   version: "1.0"
 ---
 
 # Kafka Conventions
 
-## Đặt tên topic
+## Topic naming
 
-`<context>.<aggregate>.<v1>` — ví dụ `ordering.order.v1`, `catalog.product.v1`.
-Không dùng số nhiều. Không viết hoa. Version nằm ở cuối, không ở giữa.
+`<context>.<aggregate>.<v1>` — e.g. `ordering.order.v1`, `catalog.product.v1`.
+Singular, lowercase. The version goes at the end, never in the middle.
 
-## Partition key — luật cứng
+## Partition keys — hard rules
 
-| Topic | Key | Vì sao |
+| Topic | Key | Why |
 |---|---|---|
-| `ordering.order.v1` | `OrderId` | Mọi event của một đơn phải giữ đúng thứ tự |
-| `user.click.v1` | `SessionId` | Sessionization cần cùng session vào cùng partition |
+| `ordering.order.v1` | `OrderId` | Every event for one order must stay in order |
+| `user.click.v1` | `SessionId` | Sessionization needs one session in one partition |
 
-**Không bao giờ** dùng `CustomerId` làm key cho `ordering.*` — khách VIP tạo hot partition.
+**Never** key `ordering.*` by `CustomerId` — high-volume customers create hot partitions.
 
-## Bắt buộc với mọi consumer
+## Required of every consumer
 
-1. Idempotent — xử lý lại cùng message không được đổi kết quả
-2. Commit offset **sau** khi xử lý xong, không phải trước
-3. Có DLQ: `<topic>.dlq`, và retry topic có exponential backoff
-4. Extract trace context từ Kafka header (xem `references/tracing.md`)
+1. Idempotent — reprocessing the same message must not change the outcome
+2. Commit offsets **after** processing, never before
+3. A DLQ at `<topic>.dlq`, plus a retry topic with exponential backoff
+4. Extract trace context from Kafka headers (see `references/tracing.md`)
 
-## Trước khi tạo topic mới
+## Before creating a new topic
 
-Cập nhật `docs/08-cross-cutting-concepts/event-catalog.md` **trước**, code sau.
-Không có dòng trong event catalog thì không có topic.
+Update `docs/08-cross-cutting-concepts/event-catalog.md` **first**, then write code.
+No entry in the event catalog means no topic.
 ```
 
-### `CLAUDE.md` ở gốc repo — ngắn thôi
+### Root `CLAUDE.md` — keep it short
 
-Không lặp lại nội dung skill. Chỉ ghi những gì áp dụng cho **mọi** task:
+Don't repeat skill content. Only what applies to **every** task:
 
 ```markdown
 # Agent Instructions
 
-## Lệnh chuẩn — luôn dùng, đừng gọi trực tiếp dotnet/go/pytest
-- Build & chạy: `make up` · chỉ hạ tầng: `make infra`
-- Test: `make test` · architecture test: `make arch` · lint: `make lint`
-- Sinh lại stub proto: `make proto`
+## Project language
+English only — documentation, code comments, commit messages, ADRs, and
+identifiers. No exceptions.
 
-## Luật tuyệt đối
-1. KHÔNG sửa tay file trong `building-blocks/gen/` — chạy `make proto`
-2. KHÔNG để service này tham chiếu package của service khác
-3. KHÔNG thêm topic Kafka mà chưa cập nhật event catalog
-4. Mọi quyết định kiến trúc → một ADR trong `docs/09-architecture-decisions/`
+## Standard commands — always use these, never call dotnet/go/pytest directly
+- Build & run: `make up` · infrastructure only: `make infra`
+- Tests: `make test` · architecture tests: `make arch` · lint: `make lint`
+- Regenerate proto stubs: `make proto`
 
-## Khi làm việc với vùng cụ thể
-Đọc skill tương ứng trong `.agents/skills/` trước khi viết code.
+## Absolute rules
+1. NEVER hand-edit files under `building-blocks/gen/` — run `make proto`
+2. NEVER let one service reference another service's packages
+3. NEVER add a Kafka topic without first updating the event catalog
+4. Every architectural decision gets an ADR in `docs/09-architecture-decisions/`
+
+## When working in a specific area
+Read the matching skill in `.agents/skills/` before writing code.
 ```
 
-Thêm `AGENTS.md` một dòng trỏ về `CLAUDE.md` để agent nào cũng tìm được.
+Add a one-line `AGENTS.md` pointing at `CLAUDE.md` so any agent can find it.
 
-### Giữ skill không bị lỗi thời
+### Keeping skills from going stale
 
-| Rủi ro | Cách chặn |
+| Risk | Countermeasure |
 |---|---|
-| Skill nói một đằng, `tests/arch/` ép một nẻo | Khi sửa luật, **sửa cả hai trong cùng PR**. Ghi vào checklist PR template. |
-| Skill viết rồi bỏ đó, không ai đọc | Cuối mỗi tháng, đọc lại skill của tháng đó — 15 phút |
-| Vendor skill lỗi thời so với upstream | Ghi rõ nguồn + phiên bản trong `metadata`, kiểm tra lại ở tháng 6 |
+| A skill says one thing while `tests/arch/` enforces another | When a rule changes, **change both in the same PR**. Put it in the PR template checklist. |
+| Skills written once and never read | Re-read that month's skills at the end of each month — fifteen minutes |
+| Vendored skills drifting from upstream | Record source and version in `metadata`; re-check in month 6 |
 
 ---
 
-## Việc cần làm NGAY
+## What to do RIGHT NOW
 
-Trước khi viết dòng code đầu tiên, viết ba tài liệu này:
+Before writing the first line of code:
 
-0. **`mise.toml`** — pin 4 toolchain. Mất 10 phút, cứu bạn khỏi hàng chục giờ debug môi trường.
-1. **`docs/08-cross-cutting-concepts/service-boundaries.md`** — mỗi service sở hữu dữ liệu gì, **không** được biết gì
-2. **`docs/08-cross-cutting-concepts/event-catalog.md`** — bảng: event · schema · producer · consumer · partition key
-3. **`docs/09-architecture-decisions/001-why-polyglot.md`** — lý do chọn từng ngôn ngữ, kèm trade-off thừa nhận thẳng thắn
-4. Khung `docs/` arc42 — 12 file rỗng chỉ có tiêu đề. Có khung rồi thì viết dần dễ hơn nhiều so với đối diện trang trắng.
-5. **`CLAUDE.md` + `.agents/skills/proto-contract/` + `.agents/skills/ddd-dotnet/`** — xem [mục 15](#15-agent-skills--ghim-hướng-dẫn-ai-vào-repo). Viết trước khi có code thì AI sinh code đúng convention ngay từ file đầu tiên.
+0. **`mise.toml`** — pin all four toolchains. Ten minutes; saves you dozens of hours of environment debugging.
+1. **`docs/08-cross-cutting-concepts/service-boundaries.md`** — what data each service owns, and what it is **not** allowed to know
+2. **`docs/08-cross-cutting-concepts/event-catalog.md`** — a table of event · schema · producer · consumer · partition key
+3. **`docs/09-architecture-decisions/001-why-polyglot.md`** — why each language, with the trade-offs stated honestly
+4. The arc42 `docs/` skeleton — 12 empty files with headings. Having the skeleton makes writing far easier than facing a blank page.
+5. **`CLAUDE.md` + `.agents/skills/proto-contract/` + `.agents/skills/ddd-dotnet/`** — see [section 15](#15-agent-skills--pinning-ai-guidance-into-the-repo). Written before any code exists, they make the AI produce correctly-shaped code from the very first file.
 
-> Có ranh giới service và event catalog rồi thì `proto/` viết ra sẽ đúng ngay lần đầu — và `proto/` đúng thì mọi service viết sau đó đều đúng theo.
+> With service boundaries and an event catalog settled, `proto/` comes out right the first time — and once `proto/` is right, every service built on it is right too.

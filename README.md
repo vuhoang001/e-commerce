@@ -39,8 +39,6 @@ The full build plan — 6 months, phase by phase, with acceptance criteria — l
 gRPC-vs-Kafka decision rules, local dev workflow, CI for a polyglot monorepo, known pitfalls,
 and explicit out-of-scope boundaries.
 
-> ℹ️ `PLAN.md` is written in Vietnamese, with technical terminology kept in English.
-
 Architecture documentation follows the [arc42](https://arc42.org/) template. Toolchain versions
 for all four languages are pinned with [mise](https://mise.jdx.dev/), and architectural boundaries
 are enforced by automated architecture tests rather than convention alone.
@@ -56,6 +54,13 @@ are enforced by automated architecture tests rather than convention alone.
 | 4 | Flink stream processing | ☐ |
 | 5 | Serving layer + end-to-end observability | ☐ |
 | 6 | Hardening, chaos testing, deployment, packaging | ☐ |
+
+## Project conventions
+
+- **Language: English.** Documentation, code comments, commit messages, ADRs, and identifiers.
+- **Contracts before code.** `proto/` is the single source of truth; `buf breaking` gates every PR.
+- **Boundaries are enforced, not documented.** Architecture tests run in CI.
+- **Toolchains are pinned.** `mise install` gets all four languages on the right version.
 
 ## License
 
