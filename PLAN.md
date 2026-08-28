@@ -31,6 +31,7 @@
 15. [Agent skills — pinning AI guidance into the repo](#15-agent-skills--pinning-ai-guidance-into-the-repo)
 16. [Batch pipeline — master data ingestion](#16-batch-pipeline--master-data-ingestion)
 17. [Dual-track plan — backend and data engineer](#17-dual-track-plan--backend-and-data-engineer)
+18. [Order items and master data — copy or look up](#18-order-items-and-master-data--copy-or-look-up)
 
 ---
 
@@ -437,6 +438,7 @@ This is the decision most often got wrong in microservices. The one-line rule:
 |---|---|---|
 | Gateway → any service | **gRPC** | A client is waiting on the response |
 | Order → Inventory: reserve stock | **gRPC** | You can't create the order without knowing stock is available |
+| Order → Catalog: item details at checkout | **gRPC** | You can't price the order without them — but see [section 18](#18-order-items-and-master-data--copy-or-look-up), the result is **copied**, never re-read later |
 | Order → Payment: charge | **Kafka** (saga) | May take seconds; must not block the user |
 | Order → Search: reindex | **Kafka** | Search being two seconds stale is fine |
 | Order → Recommendation: record behaviour | **Kafka** | Fire-and-forget |
@@ -578,6 +580,11 @@ lint:          ## Lint the whole repo
 
 - [ ] **order-service**, complete:
   - [ ] `Domain/` — `Order` aggregate, `OrderItem`, `Address` value object, domain events
+  - [ ] **`OrderItem` snapshots the item** — `product_id`, `product_name`, `sku`, `unit_price`,
+        `currency`, `tax_rate`, `quantity` — see [section 18](#18-order-items-and-master-data--copy-or-look-up).
+        Get this shape right now and nothing downstream needs rewriting.
+  - [ ] **Immutability test**: change the seeded product, re-read an existing order, assert nothing
+        moved. This is what stops someone normalising it away in month 4.
   - [ ] `Application/` — MediatR + `Logging → Validation → Transaction` pipeline
   - [ ] `Infrastructure/` — EF Core, Postgres, migrations
   - [ ] Idempotency: `IdentifiedCommand` + `RequestManager`
@@ -625,6 +632,10 @@ lint:          ## Lint the whole repo
   - [ ] Kafka consumer → index updates
   - [ ] Measure p99 latency; target < 50 ms
 - [ ] **inventory-service** (Go) — reserve/release stock, handle contention
+- [ ] **`order-service` local product read model** — so checkout survives catalog being down
+      ([section 18](#18-order-items-and-master-data--copy-or-look-up))
+- [ ] **Price validation at checkout** + `docs/09-architecture-decisions/00X-price-at-checkout.md`
+      recording which policy was chosen and why
 - [ ] **Outbox pattern** in order-service
 - [ ] **Debezium** reading the Postgres WAL → Kafka *(a plain publisher is acceptable as a first step)*
 - [ ] `proto/events/` + Protobuf serialization through Schema Registry
@@ -729,6 +740,10 @@ You must be able to do **and explain**:
 - [ ] **Data quality gate** between silver and gold — a bad batch must never reach gold
 - [ ] **Publisher**: gold → **log-compacted Kafka topic** `catalog.product.master.v1`
 - [ ] **catalog/search services consume it** — the batch pipeline never writes to a service database
+- [ ] **Switch `order-service`'s product read model** to this topic — the snapshot logic is untouched,
+      only the source changes ([section 18](#18-order-items-and-master-data--copy-or-look-up))
+- [ ] **Re-run the month-1 immutability test** — it must still pass. That regression is the proof the
+      staged migration was safe.
 - [ ] ★ **Enrichment join in Flink** — `revenue-rollup` gains revenue by category, brand and supplier
 - [ ] **Backfill test** — replay 90 days through the same DAG; totals must be identical, not doubled
 - [ ] **Failure test** — kill a task mid-run, re-run the same logical date, verify no duplicates
@@ -1403,6 +1418,161 @@ Before adding anything to this plan, answer both halves:
 If the answer is "neither strongly" — as it was for a full notification service — it does not go in.
 If it serves only one track, it has to displace something on that same track rather than eating the
 other track's budget.
+
+---
+
+## 18. Order items and master data — copy or look up
+
+An order has to show what was bought: item name, unit price, tax rate. That data lives in the
+catalogue, which is fed by the batch pipeline in [section 16](#16-batch-pipeline--master-data-ingestion).
+So the question is how an order gets hold of it — and the answer is not the obvious one.
+
+### The decision
+
+> **An order stores a copy of the item data as it was at the moment of purchase.
+> It never looks the product up again afterwards.**
+
+The tempting alternative — store `product_id` and join to the catalogue whenever the order is
+displayed — is wrong, and wrong in a way that is invisible until it causes real damage:
+
+| What happens later | Consequence of looking it up |
+|---|---|
+| The price rises from $20 to $25 | Every historical order silently reprices. Last month's revenue report changes. |
+| A product is renamed | Old invoices show a name the customer never saw |
+| A product is delisted | Old orders break, or render blank |
+| A supplier changes the tax rate | Historical tax calculations become unreproducible |
+
+An order is a **financial record of an agreement**. It must be readable and identical in five years,
+even if the product it refers to no longer exists. That makes this denormalization deliberate, not
+sloppy — the same reason a paper receipt doesn't contain a pointer to a price list.
+
+### What gets copied, and what deliberately does not
+
+| Field | Copied into `OrderItem`? | Why |
+|---|---|---|
+| `product_id` | ✅ | The link, for analytics and support |
+| `product_name` | ✅ | What the customer saw |
+| `sku` | ✅ | Stable identifier for fulfilment |
+| `unit_price` + `currency` | ✅ | What they agreed to pay |
+| `tax_rate` | ✅ | Tax must be reproducible years later |
+| `quantity` | ✅ | Belongs to the order, not the product |
+| **`category`, `brand`, `supplier`** | ❌ | **Analytical dimensions — not part of the agreement** |
+| `cost_price`, `margin` | ❌ | Internal, changes over time, not the customer's business |
+| `description`, `images` | ❌ | Presentation, fetched live when displaying |
+
+That split is the important part, and it resolves what looks like a contradiction with section 16.
+
+> **Transactional truth is snapshotted. Analytical dimensions are joined.**
+>
+> The order records *what was sold and at what price*. The Flink enrichment join supplies
+> *what kind of thing it was* — category, brand, supplier. Both are needed; neither replaces the other.
+
+And this is exactly where section 16's join options stop being theoretical:
+
+| Analytical question | Join type |
+|---|---|
+| "Revenue by category **this quarter**, using today's taxonomy" | **Broadcast state** — current master data |
+| "Revenue by the category each product was in **when it sold**" | **Temporal table join** — SCD Type 2 history |
+
+Two legitimate questions, two different joins, from the same order stream. Being able to explain that
+distinction is a strong answer to a question most candidates fumble.
+
+### The full path, end to end
+
+```
+  Upstream source system
+        │  nightly batch (section 16)
+        ▼
+  bronze → silver → gold
+        │
+        ▼
+  ╔════════════════════════════════════════════════╗
+  ║ KAFKA (compacted)  catalog.product.master.v1   ║
+  ╚══════╤═══════════════╤═══════════════╤═════════╝
+         │               │               │
+         ▼               ▼               ▼
+  catalog-service   search-service   order-service
+   (own copy)        (own index)      (local read model,
+                                       products only)
+                                             │
+                            checkout ────────┘
+                                 │  read price + name + tax NOW
+                                 ▼
+                        ┌──────────────────┐
+                        │    OrderItem     │  ← frozen copy, never updated again
+                        └──────────────────┘
+                                 │
+                                 ▼
+                     ordering.order.v1  (event stream)
+                                 │
+                                 ▼
+                            Flink  ⋈  master data   ← adds category/brand/supplier
+```
+
+### Why order-service keeps its own product read model
+
+At checkout, `order-service` needs current price and name. Two ways to get them:
+
+| Approach | Trade-off |
+|---|---|
+| **gRPC call to catalog-service at checkout** | Simple. But checkout — the money path — now fails whenever catalog is down. |
+| **A local read model fed by the compacted topic** ★ | Checkout survives catalog being down. Costs one more consumer and one more table. |
+
+Take the second. The justification is the one that matters commercially: **you do not let the
+checkout path fail because a catalogue service is restarting.** This is also the cleanest
+demonstration of why a compacted topic exists — a new consumer reads it from the beginning and
+arrives at complete current state with no bespoke backfill.
+
+It is **not** a violation of service ownership. `order-service` is not reading catalog's database; it
+is consuming a published contract and maintaining its own projection. That distinction is precisely
+what section 10's rule protects.
+
+### Price validation at checkout — the part worth getting right
+
+A local read model can be seconds stale, and the basket may be hours stale. So:
+
+1. The basket stores `price_at_add` — what the customer was shown
+2. At checkout, `order-service` compares it against its current read model
+3. If they differ, that is a **business decision, not a technical one** — pick one and write it down:
+   - Honour the shown price (customer-friendly; the plan's default)
+   - Reject and re-prompt (correct; irritating)
+   - Honour within a tolerance, re-prompt beyond it (what most real shops do)
+4. Whatever is decided, **the agreed price is what gets frozen into `OrderItem`**
+
+> Write this into `docs/09-architecture-decisions/00X-price-at-checkout.md`. Interviewers like this
+> question because it has no purely technical answer, and candidates who recognise that stand out.
+
+### Staged delivery — the schema is right from month 1
+
+Master data doesn't arrive until month 4.5, but orders need item details in month 1. The fix is to
+get the **shape** right immediately and swap the **source** later:
+
+| Month | Where item data comes from | `OrderItem` schema |
+|---|---|---|
+| **1** | Seeded product table inside order-service | Final — all snapshot fields present |
+| **2** | catalog-service exists; order-service consumes its events into a local read model | Unchanged |
+| **4.5** | The read model switches to `catalog.product.master.v1` from the batch pipeline | Unchanged |
+
+**Nothing downstream is rewritten**, because the snapshot logic never changes — only where the source
+data originates. Getting the `OrderItem` shape right in month 1 is what buys that.
+
+### Roadmap additions
+
+**Month 1**
+- [ ] `OrderItem` carries the full snapshot: `product_id`, `product_name`, `sku`, `unit_price`,
+      `currency`, `tax_rate`, `quantity`
+- [ ] A test proving an order is **immutable under product change** — change the seeded product,
+      re-read the order, assert nothing moved. This is the test that stops someone "helpfully"
+      normalising it later.
+
+**Month 2**
+- [ ] `order-service` maintains a local product read model
+- [ ] Price validation at checkout + the ADR recording which policy was chosen
+
+**Month 4.5**
+- [ ] Switch the read model's source to the compacted master-data topic
+- [ ] Confirm the immutability test from month 1 **still passes** — this is the regression that proves
+      the staged migration was safe
 
 ---
 
