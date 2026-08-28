@@ -1,0 +1,19 @@
+# The workflow pins every action to a commit SHA, which is immutable — and therefore
+# never updates itself. This is the other half of that decision: Dependabot opens a pull
+# request when a pinned action releases a new version, and rewrites both the SHA and the
+# version comment. Pinning without this is just a slow way to fall behind on security
+# fixes.
+version: 2
+
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: Bump
+
+  # NuGet is deliberately not here yet. Versions are centralised in
+  # Directory.Packages.props with transitive pinning, and a weekly pull request per
+  # package would drown the repository before there is anyone to review them. Revisit
+  # when the project has more than one contributor.

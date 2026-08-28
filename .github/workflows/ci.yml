@@ -1,5 +1,11 @@
 # Runs the same `make` targets you run locally. If CI and a developer's machine can
 # disagree about whether something passes, the build is not a gate — it is a suggestion.
+#
+# Every action is pinned to a commit SHA, with its version in the comment beside it.
+# `@v7` is a moving tag: the owner can repoint it at any commit, and a compromised
+# action runs with this workflow's token. A tag like `@v7.0.1` looks exact but is still
+# a tag, and tags can be moved. A SHA cannot. Dependabot raises the version bumps —
+# see .github/dependabot.yml — so pinning does not mean going stale.
 name: CI
 
 on:
@@ -25,9 +31,9 @@ jobs:
       proto: ${{ steps.filter.outputs.proto }}
       dotnet: ${{ steps.filter.outputs.dotnet }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: dorny/paths-filter@v4
+      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
         id: filter
         with:
           filters: |
@@ -52,13 +58,13 @@ jobs:
     if: needs.changes.outputs.proto == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # buf breaking compares against main, so it needs main's history.
           fetch-depth: 0
 
       # buf's version comes from mise.toml, the same file that pins it locally.
-      - uses: jdx/mise-action@v4
+      - uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
 
       - name: Lint
         run: make lint
@@ -89,12 +95,12 @@ jobs:
     if: needs.changes.outputs.dotnet == 'true' || needs.changes.outputs.proto == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       # From global.json, not mise: every SDK on a machine lives in one directory and
       # `dotnet` picks the highest unless global.json says otherwise. mise.toml pins the
       # tools it can actually control.
-      - uses: actions/setup-dotnet@v6
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           global-json-file: global.json
 
