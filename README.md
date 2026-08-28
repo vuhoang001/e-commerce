@@ -26,7 +26,7 @@ Different languages are used where each one genuinely fits:
 | `api-gateway` | C# | The single front door — routing, sign-in, rate limits |
 | `order-service` | C# | Order lifecycle and the logic that keeps it consistent |
 | `payment-service` | C# | Taking payment as part of the order flow |
-| `search-service` | Go | Fast product search |
+| `catalog-service` | Go | Product data and fast search |
 | `inventory-service` | Go | Stock levels when many buyers want the same item |
 | `recommendation-service` | Python | Similarity and suggestions |
 | `stream-processor` | Java | Turning the event stream into live figures |

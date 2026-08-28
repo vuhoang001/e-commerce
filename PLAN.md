@@ -122,7 +122,7 @@ ecommerce-polyglot/
 │   ├── payment-service/            # [C# / .NET 10]  saga participant
 │   │   └── ... (same shape, smaller)
 │   │
-│   ├── search-service/             # [Go]  low latency, high QPS
+│   ├── catalog-service/            # [Go]  owns products + serves search
 │   │   ├── cmd/server/main.go
 │   │   ├── internal/
 │   │   │   ├── handler/            # gRPC handlers
@@ -285,7 +285,7 @@ Polyglot only pays off when every choice has a **real technical reason**. This t
 |---|---|---|---|
 | **order-service** | C# / .NET | The most complex business logic: aggregates, invariants, transactions, saga. Strongest type system, EF Core, best refactoring tooling. | In Go: weaker modelling, thin ORM story, DDD code turns verbose |
 | **payment-service** | C# | Shares a language boundary with order, reuses `chassis-dotnet` | — |
-| **search-service** | Go | I/O-bound, high QPS, p99 latency matters. Goroutines + a 15 MB binary + <100 ms startup make autoscaling cheap. | In C#: slower cold start, 3–4× the RAM for the same throughput |
+| **catalog-service** | Go | Owns product master data and serves search. Read-heavy, I/O-bound, high QPS, p99 latency matters. Goroutines + a 15 MB binary + <100 ms startup make autoscaling cheap. | In C#: slower cold start, 3–4× the RAM for the same throughput |
 | **inventory-service** | Go | High contention (many buyers racing for one SKU). Needs low-level concurrency control. | — |
 | **recommendation-service** | Python | The ML ecosystem: `sentence-transformers`, `faiss`, `pandas`, `pgvector`. No other language substitutes for it. | In C#: ML.NET exists, but the ecosystem is an order of magnitude thinner |
 | **stream-processor** | Java | Flink is Java-native. DataStream API + Flink SQL. | PyFlink: slower, feature-lagging. Flink.NET: nobody uses it, nobody interviews on it |
@@ -310,7 +310,7 @@ Polyglot only pays off when every choice has a **real technical reason**. This t
 
 | Option | Mechanism | The catch |
 |---|---|---|
-| **A. gRPC JSON transcoding in each service** | `Microsoft.AspNetCore.Grpc.JsonTranscoding` reads `google.api.http` annotations and exposes REST alongside gRPC. YARP just routes. | **.NET only.** `search-service` and `inventory-service` are Go, so they can't use it. You'd add `grpc-gateway` for the two Go services — back to two parallel mechanisms. |
+| **A. gRPC JSON transcoding in each service** | `Microsoft.AspNetCore.Grpc.JsonTranscoding` reads `google.api.http` annotations and exposes REST alongside gRPC. YARP just routes. | **.NET only.** `catalog-service` and `inventory-service` are Go, so they can't use it. You'd add `grpc-gateway` for the two Go services — back to two parallel mechanisms. |
 | **B. Gateway holds gRPC clients, exposes Minimal API** ★ | The gateway references proto-generated stubs, calls services over gRPC, and exposes REST through hand-written Minimal API endpoints. | Endpoints are hand-written. But the number of genuinely public endpoints is far smaller than the number of RPCs. |
 | **C. Envoy in front, YARP behind** | Envoy does gRPC-JSON transcoding, YARP does auth/BFF | Two proxy layers — complexity this project doesn't earn |
 
@@ -345,15 +345,15 @@ Not the gRPC endpoints — the things that only need to pass straight through:
 // appsettings.json
 "ReverseProxy": {
   "Routes": {
-    "search-passthrough": {                  // search-service exposes REST via its own grpc-gateway
-      "ClusterId": "search",
-      "Match": { "Path": "/api/search/{**catch-all}" },
+    "catalog-passthrough": {                  // catalog-service exposes REST via its own grpc-gateway
+      "ClusterId": "catalog",
+      "Match": { "Path": "/api/catalog/{**catch-all}" },
       "AuthorizationPolicy": "authenticated",
       "RateLimiterPolicy": "per-user"
     }
   },
   "Clusters": {
-    "search": { "Destinations": { "d1": { "Address": "http://search-service:8080" } } }
+    "catalog": { "Destinations": { "d1": { "Address": "http://catalog-service:8080" } } }
   }
 }
 ```
@@ -377,7 +377,7 @@ Not the gRPC endpoints — the things that only need to pass straight through:
 ### Roadmap consequences
 
 - **Month 0.5:** `api-gateway` (C#) with one Minimal API endpoint calling a gRPC client → order-service
-- **Month 2:** add a YARP passthrough route for `search-service` (Go, with its own `grpc-gateway`)
+- **Month 2:** add a YARP passthrough route for `catalog-service` (Go, with its own `grpc-gateway`)
 - **Month 3:** turn the gateway into a real BFF — `GET /api/products/{id}` fans out to `search` + `recommendation` + `inventory`
 - **Month 5:** the gateway is the **origin of the distributed trace** — where the first `traceparent` is minted
 
@@ -438,7 +438,7 @@ This is the decision most often got wrong in microservices. The one-line rule:
 |---|---|---|
 | Gateway → any service | **gRPC** | A client is waiting on the response |
 | Order → Inventory: reserve stock | **gRPC** | You can't create the order without knowing stock is available |
-| Order → Catalog: item details at checkout | **gRPC** | You can't price the order without them — but see [section 18](#18-order-items-and-master-data--copy-or-look-up), the result is **copied**, never re-read later |
+| Order → Catalog: item details at checkout | **local read model** | You can't price the order without them — but see [section 18](#18-order-items-and-master-data--copy-or-look-up), the result is **copied**, never re-read later |
 | Order → Payment: charge | **Kafka** (saga) | May take seconds; must not block the user |
 | Order → Search: reindex | **Kafka** | Search being two seconds stale is fine |
 | Order → Recommendation: record behaviour | **Kafka** | Fire-and-forget |
@@ -502,7 +502,7 @@ proto-check:   ## Detect breaking changes against main
 test:          ## Run tests across all four languages
 	dotnet test services/order-service
 	dotnet test services/api-gateway
-	cd services/search-service && go test ./...
+	cd services/catalog-service && go test ./...
 	cd services/inventory-service && go test ./...
 	cd services/recommendation-service && pytest
 	cd services/stream-processor && mvn test
@@ -514,7 +514,7 @@ arch:          ## Architecture tests — enforce service and layer boundaries
 
 lint:          ## Lint the whole repo
 	cd proto && buf lint
-	cd services/search-service && golangci-lint run
+	cd services/catalog-service && golangci-lint run
 	cd services/inventory-service && golangci-lint run
 	cd services/recommendation-service && ruff check .
 ```
@@ -627,7 +627,7 @@ lint:          ## Lint the whole repo
 
 > The month the project stops being "some APIs" and becomes an event-driven system.
 
-- [ ] **search-service** (Go)
+- [ ] **catalog-service** (Go) — owns products, serves search
   - [ ] gRPC handlers + OpenSearch client
   - [ ] Kafka consumer → index updates
   - [ ] Measure p99 latency; target < 50 ms
@@ -651,7 +651,7 @@ lint:          ## Lint the whole repo
       circuit breaker. Retry without jitter creates a thundering herd — know why.
 - [ ] **Prove it works** — make `inventory-service` sleep 5 s, watch the breaker open, confirm the
       gateway degrades instead of hanging
-- [ ] **Cache-aside in `search-service`** — Redis, TTL, and **invalidation driven by a Kafka event**
+- [ ] **Cache-aside in `catalog-service`** — Redis, TTL, and **invalidation driven by a Kafka event**
       rather than by guesswork
 - [ ] **Cache stampede protection** — single-flight, so one expired key doesn't send 500 concurrent
       requests to OpenSearch
@@ -831,7 +831,7 @@ jobs:
     outputs:
       order:   ${{ steps.filter.outputs.order }}
       gateway: ${{ steps.filter.outputs.gateway }}
-      search:  ${{ steps.filter.outputs.search }}
+      catalog: ${{ steps.filter.outputs.catalog }}
       proto:   ${{ steps.filter.outputs.proto }}
     steps:
       - uses: dorny/paths-filter@v3
@@ -842,7 +842,7 @@ jobs:
             # exactly like order-service. A proto change rebuilds both.
             order:   ['services/order-service/**',  'building-blocks/gen/csharp/**', 'building-blocks/chassis-dotnet/**']
             gateway: ['services/api-gateway/**',    'building-blocks/gen/csharp/**', 'building-blocks/chassis-dotnet/**']
-            search:  ['services/search-service/**', 'building-blocks/gen/go/**',     'building-blocks/chassis-go/**']
+            catalog: ['services/catalog-service/**', 'building-blocks/gen/go/**',     'building-blocks/chassis-go/**']
             proto:   ['proto/**']
 
   proto-check:
@@ -1225,8 +1225,8 @@ about.
           │                               │
           ▼                               ▼
   catalog-service                  stream-processor
-  search-service                   (broadcast state for
-  (each owns its own copy)          enrichment joins)
+  (owns products + search index)   (broadcast state for
+                                    enrichment joins)
 ```
 
 ### Why a log-compacted topic is the bridge
@@ -1491,9 +1491,9 @@ distinction is a strong answer to a question most candidates fumble.
   ╚══════╤═══════════════╤═══════════════╤═════════╝
          │               │               │
          ▼               ▼               ▼
-  catalog-service   search-service   order-service
-   (own copy)        (own index)      (local read model,
-                                       products only)
+      catalog-service              order-service
+   (products + search index)     (local read model,
+                                   products only)
                                              │
                             checkout ────────┘
                                  │  read price + name + tax NOW
@@ -1527,11 +1527,30 @@ It is **not** a violation of service ownership. `order-service` is not reading c
 is consuming a published contract and maintaining its own projection. That distinction is precisely
 what section 10's rule protects.
 
+### Where the basket lives — decided
+
+**There is no basket service.** The basket is client-side state; the browser holds it and sends
+the price it displayed when the customer checks out.
+
+| Option | Verdict |
+|---|---|
+| **Client-side, server re-validates** ★ | Chosen. Zero services, and it forces an explicit trust boundary. |
+| A `basket-service` on Redis (eShop's approach) | An eighth service. Redis is already used for caching in `catalog-service`, so a basket service is not needed to justify it. |
+| A draft `Order` inside order-service | Puts pre-purchase browsing state inside an aggregate whose whole purpose is to be an immutable financial record. |
+
+The consequence is a security property worth being able to state out loud:
+
+> **The price arriving from the client is a claim, not a fact.** It is compared, never trusted.
+> A client sending `unit_price: 0.01` must be rejected by validation, not by good manners.
+
+Persistent baskets across devices would need a service. That is a product feature nobody is asking
+for here, and section 11 keeps it out.
+
 ### Price validation at checkout — the part worth getting right
 
-A local read model can be seconds stale, and the basket may be hours stale. So:
+A local read model can be seconds stale, and the client's basket may be hours stale. So:
 
-1. The basket stores `price_at_add` — what the customer was shown
+1. The client sends `price_shown` — what the customer actually saw
 2. At checkout, `order-service` compares it against its current read model
 3. If they differ, that is a **business decision, not a technical one** — pick one and write it down:
    - Honour the shown price (customer-friendly; the plan's default)
