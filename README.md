@@ -41,6 +41,10 @@ and explicit out-of-scope boundaries.
 
 > ℹ️ `PLAN.md` is written in Vietnamese, with technical terminology kept in English.
 
+Architecture documentation follows the [arc42](https://arc42.org/) template. Toolchain versions
+for all four languages are pinned with [mise](https://mise.jdx.dev/), and architectural boundaries
+are enforced by automated architecture tests rather than convention alone.
+
 ## Roadmap
 
 | Phase | Focus | Status |
@@ -51,7 +55,7 @@ and explicit out-of-scope boundaries.
 | 3 | Saga orchestration + Python service | ☐ |
 | 4 | Flink stream processing | ☐ |
 | 5 | Serving layer + end-to-end observability | ☐ |
-| 6 | Hardening, chaos testing, deployment | ☐ |
+| 6 | Hardening, chaos testing, deployment, packaging | ☐ |
 
 ## License
 
