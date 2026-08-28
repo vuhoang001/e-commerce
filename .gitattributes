@@ -3,6 +3,8 @@
 # Generated from proto/ — never hand-edited, excluded from diffs and language stats
 building-blocks/gen/** linguist-generated=true
 building-blocks/gen/** -diff
+# ...except this one, which is hand-written and must stay reviewable
+building-blocks/gen/README.md text -linguist-generated diff
 
 *.png binary
 *.svg binary
