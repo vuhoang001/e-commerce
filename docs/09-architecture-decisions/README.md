@@ -29,3 +29,4 @@ What else was on the table, and the specific reason each was rejected.
 | ADR | Title | Status |
 |---|---|---|
 | 001 | Why polyglot | 🔴 to write |
+| [002](002-contract-layout-and-generation.md) | Contract layout and code generation scope | ✅ Accepted |

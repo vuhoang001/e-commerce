@@ -1,0 +1,66 @@
+syntax = "proto3";
+
+package rpc.order.v1;
+
+import "common/v1/money.proto";
+import "google/protobuf/timestamp.proto";
+
+// Reads and writes orders. Owned by order-service (C#); nothing else may serve it.
+service OrderService {
+  // Returns a single order. Not found is reported as gRPC NOT_FOUND, not as an
+  // empty response.
+  rpc GetOrder(GetOrderRequest) returns (GetOrderResponse);
+}
+
+message GetOrderRequest {
+  string order_id = 1;
+}
+
+message GetOrderResponse {
+  Order order = 1;
+}
+
+message Order {
+  string order_id = 1;
+  string customer_id = 2;
+  OrderStatus status = 3;
+  repeated OrderItem items = 4;
+
+  // Sum of the lines, including tax. Carried explicitly rather than recomputed by
+  // each consumer, so every system agrees on what the customer was charged.
+  common.v1.Money total = 5;
+
+  // Always UTC.
+  google.protobuf.Timestamp placed_at = 6;
+}
+
+// A line on an order.
+//
+// This message deliberately COPIES product data instead of referencing it. When the
+// catalogue later renames a product or changes its price, an existing order must not
+// move — an order is a financial record of what was agreed at a point in time, not a
+// live view of the catalogue. See PLAN.md section 18. A test guards this; if that test
+// fails, the test is right.
+message OrderItem {
+  // Reference back to the catalogue, for reporting only. Never resolved to read a
+  // name or a price — the snapshot below is the authority.
+  string product_id = 1;
+
+  // Snapshot, taken at the moment the order was placed.
+  string product_name = 2;
+  string sku = 3;
+  common.v1.Money unit_price = 4;
+
+  // Tax rate in basis points, snapshotted with the price: 1000 is 10.00%.
+  // An integer because a tax rate multiplies money, and a float would round.
+  int32 tax_rate_basis_points = 5;
+
+  int32 quantity = 6;
+}
+
+enum OrderStatus {
+  ORDER_STATUS_UNSPECIFIED = 0;
+  ORDER_STATUS_PENDING = 1;
+  ORDER_STATUS_CONFIRMED = 2;
+  ORDER_STATUS_CANCELLED = 3;
+}

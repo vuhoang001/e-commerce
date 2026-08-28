@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package common.v1;
+
+// An exact amount of money in a single currency.
+//
+// Field-for-field identical to google.type.Money, so it can be swapped for the
+// Google type later without a wire-format change. Defined locally to keep the
+// repository free of a googleapis dependency for one message.
+//
+// Never represent money as a double: 0.1 + 0.2 != 0.3 in binary floating point,
+// and an order total is a permanent financial record.
+message Money {
+  // ISO 4217 currency code, uppercase. For example "USD", "VND".
+  string currency_code = 1;
+
+  // Whole units of the currency. For "USD", 3 units is $3.
+  int64 units = 2;
+
+  // Fractional part, in billionths of a unit, between -999,999,999 and
+  // +999,999,999. For "USD", 750,000,000 nanos is $0.75.
+  //
+  // If units is non-zero, nanos must carry the same sign. Nine decimal places
+  // is enough to hold a unit price that a tax or discount rate has divided.
+  int32 nanos = 3;
+}

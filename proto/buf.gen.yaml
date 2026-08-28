@@ -1,0 +1,44 @@
+# Generates stubs into building-blocks/gen/. Never hand-edit the output — run `make proto`.
+#
+# C# only for now. The other three languages are listed in PLAN.md section 4 and are
+# added here as each service arrives (see the commented block below), mirroring how
+# mise.toml pins a toolchain only once something uses it. Generating stubs nothing
+# compiles against produces dead code that still has to pass review.
+version: v2
+
+# Wipe each output directory before generating, so a deleted .proto cannot leave an
+# orphaned .cs file behind that still compiles.
+clean: true
+
+managed:
+  enabled: true
+  override:
+    # common.v1 -> Ecommerce.Common.V1, rpc.order.v1 -> Ecommerce.Rpc.Order.V1
+    - file_option: csharp_namespace_prefix
+      value: Ecommerce
+
+plugins:
+  - remote: buf.build/protocolbuffers/csharp
+    out: ../building-blocks/gen/csharp
+    # Without base_namespace the C# plugin flattens every file into one directory,
+    # where rpc/order/v1/order_service.proto and any future
+    # events/order/v1/order_service.proto would both want OrderService.cs.
+    # This mirrors the namespace as directories instead.
+    opt: base_namespace=Ecommerce
+  - remote: buf.build/grpc/csharp
+    out: ../building-blocks/gen/csharp
+    opt: base_namespace=Ecommerce
+
+  # Month 2 — catalog-service and inventory-service (Go)
+  # - remote: buf.build/protocolbuffers/go
+  #   out: ../building-blocks/gen/go
+  # - remote: buf.build/grpc/go
+  #   out: ../building-blocks/gen/go
+  #
+  # Month 3 — recommendation-service (Python)
+  # - remote: buf.build/protocolbuffers/python
+  #   out: ../building-blocks/gen/python
+  #
+  # Month 4 — stream-processor (Java / Flink)
+  # - remote: buf.build/protocolbuffers/java
+  #   out: ../building-blocks/gen/java

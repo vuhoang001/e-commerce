@@ -1,0 +1,16 @@
+# Lint and breaking-change rules for every contract in this repository.
+# One module rooted at proto/, so a file's package always mirrors its directory:
+#   common/v1/money.proto          -> package common.v1
+#   rpc/order/v1/order_service.proto -> package rpc.order.v1
+#   events/order/v1/order_placed.proto -> package events.order.v1
+# Keeping rpc. and events. in the package name means a request type and an event
+# type can never be confused for one another, in any generated language.
+version: v2
+modules:
+  - path: .
+lint:
+  use:
+    - STANDARD
+breaking:
+  use:
+    - FILE
