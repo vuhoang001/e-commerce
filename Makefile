@@ -2,7 +2,12 @@
 # the missing target belongs here instead.
 
 .DEFAULT_GOAL := help
-.PHONY: help setup up infra down clean ps logs proto proto-check test arch lint
+
+# Defaults for the single-service targets below. `run` assumes the C# layout;
+# the Go services in month 2 use cmd/server and will need their own recipe.
+S ?= order-service
+PORT ?= 5001
+.PHONY: help setup up infra run call down clean ps logs proto proto-check test arch lint
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -19,6 +24,13 @@ up: ## Start everything (infrastructure + services)
 
 infra: ## Infrastructure only — use when debugging a service from the IDE
 	docker compose -f compose.infra.yml up -d
+
+run: ## Run one service from source, no containers (make run S=order-service)
+	dotnet run --project services/$(S)/src/Api --no-launch-profile
+
+call: ## Call a running service (make call S=order-service M=rpc.order.v1.OrderService/GetOrder D='{"order_id":"1"}')
+	grpcurl -plaintext -import-path proto -proto rpc/order/v1/order_service.proto \
+		-d '$(D)' localhost:$(PORT) $(M)
 
 down: ## Stop everything, keep volumes
 	docker compose -f compose.infra.yml -f compose.services.yml down

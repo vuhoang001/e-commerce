@@ -2,8 +2,9 @@
 # Adding a language here is a deliberate act — see PLAN.md section 3 before doing it.
 
 [tools]
-dotnet = "10.0"
-buf    = "latest"
+dotnet  = "10.0"
+buf     = "latest"
+grpcurl = "1.9.3"   # poke a gRPC service by hand — `make call`
 # Uncomment each as its phase arrives (PLAN.md section 8):
 # go     = "1.24"      # month 2
 # python = "3.12"      # month 3
